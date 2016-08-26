@@ -21,7 +21,7 @@ Usage
 License
 -------
 
-KFS - A Kademlia inspired local file store based on LevelDB
+KFS - A Kademlia inspired local file store based on LevelDB  
 Copyright (C) 2016  Gordon Hall
 
 This program is free software: you can redistribute it and/or modify
