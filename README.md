@@ -85,6 +85,12 @@ placed in it. Once a KFS database is full, another should be created using a
 new Reference ID. Given the default constants, KFS databases are capped at a 
 maximum of 8TiB each.
 
+A visual example is illustrated below:
+
+```
+TODO
+```
+
 ### Keying Data by Chunks
 
 To optimize the efficiency of reads and writes in KFS, data is stored in `C` 
