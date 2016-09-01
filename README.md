@@ -33,22 +33,22 @@ Motivation
 ----------
 
 The Storj network consists of a number of distributed peers who provide 
-storage capacity for lease to others. In it's current implementation, these 
+storage capacity for lease to others. In its current implementation, these 
 nodes store encrypted shards and their associated metadata in a [LevelDB]. 
 LevelDB provides a number of features that make it desirable for this use 
-case; this includes it's lexicographically sorted keys providing fast lookups 
+case; this includes its lexicographically sorted keys providing fast lookups 
 for content-addressable values, fast and efficient compression, and perhaps 
-most notably it's portability which allows the Storj software to run on a 
+most notably its portability which allows the Storj software to run on a 
 wide range of hardware including dated or underpowered computers.
 
-However, due to the nature of LevelDB's design and it's implementation in 
-the Storj software, it's performance suffers after the size of the database 
+However, due to the nature of LevelDB's design and its implementation in 
+the Storj software, its performance suffers after the size of the database 
 exceeds approximately 100GiB. This impact is larger on lower end systems and 
 can also vary based on the type of disk in use. These performance issues seem 
-to arise from LevelDB's compaction mechanism (which is a desirable feature).
-In addition to the cost of compaction, LevelDB blocks reads and writes during 
-this process, which causes storage nodes to become effectively offline until 
-the process completes. 
+to arise from LevelDB's compaction mechanism (which is an otherwise desirable 
+feature). In addition to the cost of compaction, LevelDB blocks reads and 
+writes during this process, which causes storage nodes to become effectively 
+offline until the process completes. 
 
 These properties indicate that if the size of a single database can be given an 
 upper bound, then the cost of compaction can be significantly reduced to an 
@@ -68,7 +68,7 @@ Mechanics
 
 KFS requires that there be a reference identifier, which can be any arbitrary 
 `B` bit key. This can be randomly generated upon creation of the database or 
-derived from some other applcation or protocol specific information. In the 
+derived from some other application or protocol specific information. In the 
 Storj network, nodes are addressed with a 160 bit node identifier derived from 
 the public portion of an ECDSA key pair. This reference identifier is used to 
 calculate the database shard or *S-Bucket* to which a given piece of data 
@@ -76,19 +76,36 @@ belongs by calculating the [distance] between the hash of the data and the
 *Reference ID*. Collectively, these S-Buckets form the *B-Table*.
 
 In KFS, there are a total of `B` S-Buckets (one per bit in the Reference ID). 
-S-Buckets store the raw binary data whose hash's *nth* bit differs from the 
-reference point. This is to say that if the resulting hash's nth bit differs 
-from the reference point, then it should be stored in the nth S-Bucket. A 
-S-Bucket has a fixed size, `S`, in bytes which means that a KFS database has 
-a maximum size of `B * S` bytes. Once a S-Bucket is full, no more data can be 
-placed in it. Once a KFS database is full, another should be created using a 
-new Reference ID. Given the default constants, KFS databases are capped at a 
-maximum of 8TiB each.
+S-Buckets store the raw binary data whose hash's *n<sup>th</sup>* bit differs 
+from the reference point. This is to say that if the resulting hash's 
+n<sup>th</sup> bit differs from the reference point, then it should be stored 
+in the n<sup>th</sup> S-Bucket. A S-Bucket has a fixed size, `S`, in bytes 
+which means that a KFS database has a maximum size of `B * S` bytes. Once a 
+S-Bucket is full, no more data can be placed in it. Once a KFS database is 
+full, another should be created using a new Reference ID. Given the default 
+constants, KFS databases are capped at a maximum of 8TiB each.
 
 A visual example is illustrated below:
 
 ```
-TODO
+
+                S-Buckets (one per bit in Reference ID)
+
+|  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 159 |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+|     |     |XXXXX|     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
+|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
+|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
+|     |     |     |     |     |     |     |     |XXXXX|     |     |XXXXX|
+|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
+|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
+|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
+|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
+   ^                                                                 ^
+S-Bucket created/opened                          * "Hot Spots" can be left open
+only when it is needed                           *  When bucket full, relay the 
+                                                    opportunity to neighbors
+
 ```
 
 ### Keying Data by Chunks
@@ -171,7 +188,7 @@ Considerations Specific to Storj
 License
 -------
 
-KFS - A Local File Storage System Inspired by Kademlia
+KFS - A Local File Storage System Inspired by Kademlia  
 Copyright (C) 2016 Gordon Hall
 
 This program is free software: you can redistribute it and/or modify
