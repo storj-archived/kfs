@@ -70,28 +70,27 @@ KFS requires that there be a reference identifier, which can be any arbitrary
 `B` bit key. This can be randomly generated upon creation of the database or 
 derived from some other application or protocol specific information. In the 
 Storj network, nodes are addressed with a 160 bit node identifier derived from 
-the public portion of an ECDSA key pair. This reference identifier is used to 
+the public portion of an ECDSA key pair. This *Reference ID* is used to 
 calculate the database shard or *S-Bucket* to which a given piece of data 
-belongs by calculating the [distance] between the hash of the data and the 
-*Reference ID*. Collectively, these S-Buckets form the *B-Table*.
+belongs. Collectively, these S-Buckets form the *B-Table*.
 
-In KFS, there are a total of `B` S-Buckets (one per bit in the Reference ID). 
-S-Buckets store the raw binary data whose hash's *n<sup>th</sup>* bit differs 
-from the reference point. This is to say that if the resulting hash's 
-n<sup>th</sup> bit differs from the reference point, then it should be stored 
-in the n<sup>th</sup> S-Bucket. A S-Bucket has a fixed size, `S`, in bytes 
-which means that a KFS database has a maximum size of `B * S` bytes. Once a 
-S-Bucket is full, no more data can be placed in it. Once a KFS database is 
-full, another should be created using a new Reference ID. Given the default 
-constants, KFS databases are capped at a maximum of 8TiB each.
+In KFS, there are a total of 256 S-Buckets, numbered 0-255. To determine which
+bucket a piece of raw binary data belongs in, calculate the [distance] between 
+the first byte of the hash of the data and the first byte of the reference ID.
+This is to say that if the distance between those bytes is 137, then the raw
+binary data should be stored in S-Bucket 137. An S-Bucket has a fixed size, 
+`S`, in bytes. This means that a KFS database has a maximum size of `256 * S` 
+bytes. Once an S-Bucket is full, no more data can be placed in it. Once a KFS 
+database is full, another should be created using a new Reference ID. Given 
+the default constants, KFS databases are capped at a maximum of 8TiB each.
 
 A visual example is illustrated below:
 
 ```
 
-                S-Buckets (one per bit in Reference ID)
+                S-Buckets
 
-|  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 159 |
+|  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 255 |
 |-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
 |     |     |XXXXX|     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
 |     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
@@ -133,30 +132,19 @@ should be less than or equal to five.
 ### Ad-Hoc S-Bucket Initialization
 
 Given the low cost of creating and opening a LevelDB, it is not necessary to 
-create all `B` S-Buckets at once. Instead, a S-Bucket can be created the first 
+create all 256 S-Buckets at once. Instead, an S-Bucket can be created the first 
 time data is to be stored inside of it. Additionally, S-Buckets can be opened 
 and closed as needed, eliminating the potential overhead of opening a large 
 number of file descriptors. Operations on a given S-Bucket should be added to 
 a queue which when drained may trigger a close of the S-Bucket's underlying 
 database.
 
-Due to the nature of Kademlia's metric for determining distance, the possible 
-candidates for each S-Bucket decreases quickly (because there will be very few 
-hashes that are significantly close), the lower bit S-Buckets will be the first 
-to reach their cap. Since the quantity of possible hashes is much larger than 
-any node population can ever be, some of the S-Buckets corresponding to very 
-short distances will likely remain empty.
-
-In some cases this trait is undesirable because it means that in practice the 
-maximum capacity of a given KFS instance will be less than the defined 
-constraints. However, in the case of the Storj network, if a node cannot store 
-a piece of data it must relay the opportunity to a nearby node which may serve 
-to improve the equality of shard distribution among peers.
-
-Because S-Buckets representing greater distance from the Reference ID will be 
-more active, implementations of KFS can selectively choose to leave these "hot 
-spots" open all of the time to avoid potential churn of frequent opening and 
-closing of their underlying databases.
+Due to the nature of Kademlia's metric for determining distance, buckets will
+fill approximately evenly. The result of the XOR operation on the pseudo-random 
+first bytes of the reference ID and hash should give any given bucket a
+relatively even chance of receiving any given file. As the node approaches 
+capacity, some buckets will fill sooner than others. Offers that would be sorted
+into these buckets should be declined and relayed to other nodes.
 
 Constants
 ---------
@@ -164,7 +152,7 @@ Constants
 | Name | Description                       | Default               |
 |------|-----------------------------------|-----------------------|
 | B    | Number of bits in Reference ID    | 160                   |
-| S    | Size (in bytes) of a S-Bucket     | 5.5 * 10<sup>10</sup> |
+| S    | Size (in gibibytes) of an S-Bucket| 32                    |
 | C    | Size (in bytes) of a file chunk   | 65536                 |
 
 Considerations Specific to Storj
