@@ -3,8 +3,8 @@ KFS - A Local File Storage System Inspired by Kademlia
 
 The KFS system describes a method for managing the storage layer of nodes on 
 the [Storj Network] by creating a sharded local database where 
-content-addressable data is placed in a shard using on the same routing 
-algorithm used by the [Kademlia] distributed hash table.
+content-addressable data is placed in a shard using the same routing metric
+and algorithm used by the [Kademlia] distributed hash table.
 
 Quick Start
 -----------
