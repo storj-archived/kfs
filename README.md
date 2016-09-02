@@ -203,4 +203,4 @@ along with this program.  If not, see [http://www.gnu.org/licenses/].
 [LevelDB]: http://leveldb.org/ "LevelDB"
 [distance]: https://en.wikipedia.org/wiki/Kademlia#Routing_tables
 [Node Package Manager]: https://npmjs.org "Node Package Manager"
-[documentation]: doc/ "Package Documentation"
+[documentation]: http://bookch.in/kfs/ "Package Documentation"

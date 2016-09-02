@@ -13,7 +13,7 @@
     "linter": "jshint --config .jshintrc ./index.js ./lib ./test",
     "coverage": "istanbul cover _mocha -- --recursive",
     "generate-docs": "mkdir -p ./jsdoc && rm -r ./jsdoc && jsdoc index.js lib -r -R README.md -u ./doc -c .jsdoc.json --verbose -d ./jsdoc && cp -r doc/img jsdoc/img",
-    "deploy-docs": "ghpages -d jsdoc"
+    "deploy-docs": "gh-pages -d jsdoc"
   },
   "repository": {
     "type": "git",
