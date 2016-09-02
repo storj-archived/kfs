@@ -12,7 +12,7 @@
     "testsuite": "mocha test/** --recursive",
     "linter": "jshint --config .jshintrc ./index.js ./lib ./test",
     "coverage": "istanbul cover _mocha -- --recursive",
-    "generate-docs": "mkdir -p ./jsdoc && rm -r ./jsdoc && jsdoc index.js lib -r -R README.md -u ./doc -c .jsdoc.json --verbose -d ./jsdoc && cp -r doc/img jsdoc/img",
+    "generate-docs": "mkdir -p ./jsdoc && rm -r ./jsdoc && jsdoc index.js lib -r -R README.md -u ./doc -c .jsdoc.json --verbose -d ./jsdoc && mkdir -p jsdoc/doc/img && cp -r doc/img/* jsdoc/doc/img",
     "deploy-docs": "gh-pages -d jsdoc"
   },
   "repository": {
