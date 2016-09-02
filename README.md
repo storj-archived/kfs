@@ -144,8 +144,14 @@ database.
 Due to the nature of Kademlia's metric for determining distance, buckets will
 fill approximately evenly. The result of the XOR operation on the pseudo-random 
 first bytes of the reference ID and hash should give any given bucket a
-relatively even chance of receiving any given file. As the node approaches 
-capacity, some buckets will fill sooner than others. Offers that would be sorted
+relatively even chance of receiving any given file. 
+ 
+Below is the frequency distribution plotted with one million simulated calculations.
+As expected the distribution is uniform: 
+
+![Frequency Distribution](https://github.com/pgerbes1/kfs/raw/master/img/xor_metric_distribution.png)
+
+As the node reaches capacity, some buckets will fill sooner than others. Offers that would be sorted
 into these buckets should be declined and relayed to other nodes.
 
 Constants
