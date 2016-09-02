@@ -91,29 +91,6 @@ fixed size, `S`, in bytes. This means that a KFS database has a maximum size of
 a KFS database is full, another should be created using a new Reference ID. 
 Given the default constants, KFS databases are capped at a maximum of 8TiB each.
 
-A visual example is illustrated below:
-
-```
-
-                S-Buckets (total of B columns)
-
-|  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 255 |
-|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
-|     |     |XXXXX|     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |     |XXXXX|     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-   ^                                                                 ^
-S-Bucket created/opened                          * "Hot Spots" can be left open
-only when it is needed                           *  When bucket full, relay the 
-                                                    opportunity to neighbors
-
-```
-
 ### Keying Data by Chunks
 
 To optimize the efficiency of reads and writes in KFS, data is stored in `C` 
