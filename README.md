@@ -151,8 +151,8 @@ As expected the distribution is uniform:
 
 ![Frequency Distribution](https://github.com/pgerbes1/kfs/raw/master/img/xor_metric_distribution.png)
 
-As the node reaches capacity, some buckets will fill sooner than others. Offers that would be sorted
-into these buckets should be declined and relayed to other nodes.
+Even with a uniform distribution, as the node reaches capacity some buckets will fill sooner than others. 
+Offers that would be sorted into these buckets should be declined and relayed to other nodes.
 
 Constants
 ---------
