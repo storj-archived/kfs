@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>KFS Source: lib/s-bucket.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.dark.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.lumen.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">KFS</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-kfs.html">kfs</a></li><li><a href="module-kfs_constants.html">kfs/constants</a></li><li><a href="module-kfs_utils.html">kfs/utils</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Btable.html">Btable</a></li><li><a href="Sbucket.html">Sbucket</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Interface</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+		<div class="col-sm-3 col-md-3">
+            <form class="navbar-form" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: lib/s-bucket.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript ">'use strict';
+
+var merge = require('merge');
+var stream = require('readable-stream');
+var leveldown = require('leveldown');
+var inherits = require('util').inherits;
+var events = require('events');
+var constants = require('./constants');
+var utils = require('./utils');
+
+/**
+ * Capped LevelDB database within a {@link Btable}
+ * @constructor
+ * @param {String} dbPath - The path to database on disk
+ * @param {Object} [options] - Options to pass through to leveldown#open
+ * @param {Number} [options.maxOpenFiles=1000]
+ * @param {Boolean} [options.compression=true]
+ * @param {Number} [options.cacheSize=8388608]
+ * @param {Boolean} [options.createIfMissing=true]
+ * @param {Boolean} [options.errorIfExists=false]
+ * @param {Number} [options.writeBufferSize=4194304]
+ * @param {Number} [options.blockSize=4096]
+ * @param {Number} [options.blockRestartInterval=16]
+ */
+function Sbucket(dbPath, options) {
+  if (!(this instanceof Sbucket)) {
+    return new Sbucket(dbPath, options);
+  }
+
+  events.EventEmitter.call(this);
+
+  this._options = merge(Object.create(Sbucket.DEFAULTS), options);
+  this._db = leveldown(dbPath);
+  this.readyState = Sbucket.CLOSED;
+}
+
+inherits(Sbucket, events.EventEmitter);
+
+/**
+ * Triggered when the underlying database opens
+ * @event Sbucket#open
+ */
+
+/**
+ * Triggered when the underlying database closes
+ * @event Sbucket#close
+ */
+
+Sbucket.CLOSED = 4;
+Sbucket.CLOSING = 3;
+Sbucket.OPENED = 2;
+Sbucket.OPENING = 1;
+Sbucket.SIZE_START_KEY = '0';
+Sbucket.SIZE_END_KEY = 'z';
+Sbucket.DEFAULTS = {
+  maxOpenFiles: 1000,
+  compression: true,
+  cacheSize: 8 * (1024 * 1024),
+  createIfMissing: true,
+  errorIfExists: false,
+  writeBufferSize: 4 * (1024 * 1024),
+  blockSize: 4096,
+  blockRestartInterval: 16
+};
+
+/**
+ * Opens the underlying database
+ * @fires Sbucket#open
+ * @param {Sbucket~openCallback}
+ */
+Sbucket.prototype.open = function(callback) {
+  var self = this;
+  callback = callback || utils.noop;
+
+  function _open() {
+    self.readyState = Sbucket.OPENING;
+    self._db.open(self._options, function(err) {
+      if (err) {
+        return self.emit('error', err);
+      }
+
+      self.readyState = Sbucket.OPENED;
+      self.emit('open');
+    });
+  }
+
+  this.once('open', callback);
+  this.once('error', function(err) {
+    this.removeListener('open', callback);
+    callback(err);
+  });
+
+  if (this.readyState === Sbucket.OPENED) {
+    return self.emit('open');
+  }
+
+  if (this.readyState === Sbucket.OPENING) {
+    return;
+  }
+
+  if (this.readyState === Sbucket.CLOSING) {
+    return self.once('close', _open);
+  }
+
+  _open();
+};
+/**
+ * @callback Sbucket~openCallback
+ * @param {Error} [error]
+ */
+
+/**
+ * Closes the underlying database
+ * @fires Sbucket#close
+ * @param {Sbucket~closeCallback}
+ */
+Sbucket.prototype.close = function(callback) {
+  var self = this;
+  callback = callback || utils.noop;
+
+  function _close() {
+    self.readyState = Sbucket.CLOSING;
+    self._db.close(function(err) {
+      if (err) {
+        return self.emit('error', err);
+      }
+
+      self.readyState = Sbucket.CLOSED;
+      self.emit('close');
+    });
+  }
+
+  this.once('close', callback);
+  this.once('error', function(err) {
+    this.removeListener('close', callback);
+    callback(err);
+  });
+
+  if (this.readyState === Sbucket.CLOSED) {
+    return self.emit('close');
+  }
+
+  if (this.readyState === Sbucket.CLOSING) {
+    return;
+  }
+
+  if (this.readyState === Sbucket.OPENING) {
+    return this.once('open', _close);
+  }
+
+  _close();
+};
+/**
+ * @callback Sbucket~closeCallback
+ * @param {Error} [error]
+ */
+
+/**
+ * Determines if the file is already stored in the db
+ * @param {String} key - The key for the file stored
+ * @param {Sbucket~existsCallback}
+ */
+Sbucket.prototype.exists = function(key, callback) {
+  this._db.get(utils.createItemKeyFromIndex(key, 0), function(err) {
+    callback(!err);
+  });
+};
+/**
+ * @callback Sbucket~existsCallback
+ * @param {Boolean} fileDoesExist
+ */
+
+/**
+ * Deletes the file chunks from the database
+ * @param {String} key - The key for the file stored
+ * @param {Sbucket~unlinkCallback}
+ */
+Sbucket.prototype.unlink = function(key, callback) {
+  var self = this;
+  var index = 0;
+
+  function _del(index, callback) {
+    var itemKey = utils.createItemKeyFromIndex(key, index);
+
+    self._db.get(itemKey, function(err) {
+      index++;
+
+      if (!err) {
+        self._db.del(itemKey, function() {
+          _del(index, callback);
+        });
+      } else if (err.type === 'NotFoundError') {
+        callback(null);
+      } else {
+        callback(err);
+      }
+    });
+  }
+
+  _del(index, callback);
+};
+/**
+ * @callback Sbucket~unlinkCallback
+ * @param {Error} [error]
+ */
+
+/**
+ * Reads the file at the given key into a buffer
+ * @param {String} key - The key for the file to read
+ * @param {Sbucket~readFileCallback}
+ */
+Sbucket.prototype.readFile = function(key, callback) {
+  var fileBuffer = new Buffer([], 'binary');
+  var readStream = this.createReadStream(key);
+
+  readStream.on('data', function(data) {
+    fileBuffer = Buffer.concat([fileBuffer, data]);
+  });
+
+  readStream.on('end', function() {
+    callback(null, fileBuffer);
+  });
+
+  readStream.on('error', function(err) {
+    readStream.removeAllListeners();
+    callback(err);
+  });
+};
+/**
+ * @callback Sbucket~readFileCallback
+ * @param {Error} [error]
+ * @param {Buffer} fileBuffer
+ */
+
+/**
+ * Writes the buffer to the given key
+ * @param {String} key - The key for the file to write
+ * @param {Buffer} buffer - The data to write to the given key
+ * @param {Sbucket~writeFileCallback}
+ */
+Sbucket.prototype.writeFile = function(key, buffer, callback) {
+  var writeStream = this.createWriteStream(key);
+  var whichSlice = 0;
+
+  function _writeFileSlice() {
+    var startIndex = whichSlice * constants.C;
+    var endIndex = startIndex + constants.C;
+    var bufferSlice = buffer.slice(startIndex, endIndex);
+
+    if (bufferSlice.length === 0) {
+      return writeStream.end();
+    }
+
+    writeStream.write(bufferSlice);
+    _writeFileSlice();
+  }
+
+  writeStream.on('finish', function() {
+    callback(null);
+  });
+
+  writeStream.on('error', function(err) {
+    writeStream.removeAllListeners();
+    callback(err);
+  });
+
+  this.unlink(key, function(err) {
+    if (err) {
+      return callback(err);
+    }
+
+    _writeFileSlice();
+  });
+};
+/**
+ * @callback Sbucket~writeFileCallback
+ * @param {Error} [error]
+ */
+
+/**
+ * Returns a readable stream of the file at the given key
+ * @param {String} key - The key for the file to read
+ * @returns {ReadableStream}
+ */
+Sbucket.prototype.createReadStream = function(key) {
+  var self = this;
+  var index = 0;
+
+  return this._decorateStreamWithDestroy(key, new stream.Readable({
+    read: function() {
+      var rs = this;
+
+      self._db.get(
+        utils.createItemKeyFromIndex(key, index),
+        function(err, result) {
+          if (err) {
+            if (err.type === 'NotFoundError') {
+              return rs.push(null);
+            } else {
+              return rs.emit('error', err);
+            }
+          }
+
+          index++;
+          rs.push(Buffer(result, 'binary'));
+        }
+      );
+    }
+  }));
+};
+
+/**
+ * Returns a writable stream for a file at the given key
+ * @param {String} key - The key for the file to read
+ * @returns {WritableStream}
+ */
+Sbucket.prototype.createWriteStream = function(key) {
+  var self = this;
+  var index = 0;
+
+  return this._decorateStreamWithDestroy(key, new stream.Writable({
+    write: function(bytes, encoding, callback) {
+      self._db.put(
+        utils.createItemKeyFromIndex(key, index),
+        bytes,
+        function(err) {
+          if (err) {
+            return callback(err);
+          }
+
+          index++;
+          callback();
+        }
+      );
+    }
+  }));
+};
+
+/**
+ * Get stats for this bucket
+ * @param {Sbucket~statCallback}
+ */
+Sbucket.prototype.stat = function(callback) {
+  this._db.approximateSize(
+    Sbucket.SIZE_START_KEY,
+    Sbucket.SIZE_END_KEY,
+    function(err, size) {
+      if (err) {
+        return callback(err);
+      }
+
+      callback(null, {
+        size: size,
+        free: constants.S - size
+      });
+    }
+  );
+};
+/**
+ * @callback Sbucket~statCallback
+ * @param {Error} [error]
+ * @param {Object} bucketStats
+ * @param {Number} bucketStats.size - The used space in bytes
+ * @param {Number} bucketStats.free - The free space left in bytes
+ */
+
+/**
+ * Decorates a stream with a destroy method to remove any data written
+ * @private
+ * @param {String} key
+ * @param {Stream} stream
+ */
+Sbucket.prototype._decorateStreamWithDestroy = function(key, stream) {
+  var self = this;
+
+  stream.destroy = function(callback) {
+    self.unlink(key, callback || utils.noop);
+  };
+
+  return stream;
+};
+
+/**
+ * Checks if the levelup backend is using leveldown
+ * @private
+ * @returns {Boolean}
+ */
+Sbucket.prototype._isUsingDefaultBackend = function() {
+  return this._options.levelupBackend === Sbucket.DEFAULTS.levelupBackend;
+};
+
+module.exports = Sbucket;
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+<div class="modal fade" id="searchResults">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Search results</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<footer>
+
+
+	<span class="copyright">
+	Copyright 2016 Gordon Hall
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+<script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			var id = $( heading ).attr( "id" );
+			return id && id.replace(/\~/g, '-inner-').replace(/\./g, '-static-') || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		SearcherDisplay.init();
+	});
+</script>
+
+</body>
+</html>

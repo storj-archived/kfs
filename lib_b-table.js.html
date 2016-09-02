@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>KFS Source: lib/b-table.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.dark.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.lumen.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">KFS</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-kfs.html">kfs</a></li><li><a href="module-kfs_constants.html">kfs/constants</a></li><li><a href="module-kfs_utils.html">kfs/utils</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Btable.html">Btable</a></li><li><a href="Sbucket.html">Sbucket</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Interface</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+		<div class="col-sm-3 col-md-3">
+            <form class="navbar-form" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: lib/b-table.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript ">'use strict';
+
+var inherits = require('util').inherits;
+var merge = require('merge');
+var events = require('events');
+var fs = require('fs');
+var mkdirp = require('mkdirp');
+var utils = require('./utils');
+var constants = require('./constants');
+var Sbucket = require('./s-bucket');
+var path = require('path');
+var assert = require('assert');
+
+/**
+ * A series of {@link Sbucket}s composing a sharded table
+ * @constructor
+ * @param {String} tablePath - The path to the directory to store the table
+ * @param {Object} [options]
+ * @param {String} [options.referenceId] - R bit hex reference ID
+ * @param {Object} [options.sBucketOpts] - Options to pass to Sbucket creation
+ */
+function Btable(tablePath, options) {
+  if (!(this instanceof Btable)) {
+    return new Btable(tablePath, options);
+  }
+
+  events.EventEmitter.call(this);
+
+  this._options = merge(Object.create(Btable.DEFAULTS), options);
+  this._rid = utils.createReferenceId(this._options.referenceId);
+  this._sBuckets = {};
+  this._activityQueues = {};
+  this._tablePath = utils.coerceTablePath(tablePath);
+
+  this._open();
+}
+
+inherits(Btable, events.EventEmitter);
+
+/**
+ * Triggered when the B-table is ready
+ * @event Btable#ready
+ */
+
+/**
+ * Triggered if there is an error
+ * @event Btable#error
+ * @param {Error} error
+ */
+
+Btable.RID_FILENAME = 'r.id';
+Btable.DEFAULTS = {
+  referenceId: null,
+  sBucketOpts: {}
+};
+
+/**
+ * Opens the Btable, creating it if it does not exist
+ * @private
+ */
+Btable.prototype._open = function() {
+  var self = this;
+
+  function _callback(err) {
+    if (err) {
+      return self.emit('error', err);
+    }
+
+    self._rid = fs.readFileSync(
+      path.join(self._tablePath, Btable.RID_FILENAME),
+      { encoding: 'hex' }
+    );
+
+    self.emit('ready');
+  }
+
+  if (!utils.fileDoesExist(this._tablePath)) {
+    return this._initBtableDirectory(_callback);
+  }
+
+  this._validateTablePath(_callback);
+};
+
+/**
+ * Initializes a new KFS database (B-table directory)
+ * @private
+ */
+Btable.prototype._initBtableDirectory = function(callback) {
+  var self = this;
+
+  mkdirp(this._tablePath, function(err) {
+    if (err) {
+      return callback(err);
+    }
+
+    fs.writeFileSync(
+      path.join(self._tablePath, Btable.RID_FILENAME),
+      self._rid,
+      { encoding: 'hex' }
+    );
+
+    callback(null);
+  });
+};
+
+/**
+ * Validates a path to a directory as a KFS instance
+ * @private
+ */
+Btable.prototype._validateTablePath = function(callback) {
+  var dirStats = fs.statSync(this._tablePath);
+
+  if (!dirStats.isDirectory()) {
+    return callback(new Error('Table path is not a directory'));
+  }
+
+  var requiredPaths = [Btable.RID_FILENAME];
+  var dirContents = fs.readdirSync(this._tablePath);
+
+  for (var i = 0; i &lt; requiredPaths.length; i++) {
+    var pathName = requiredPaths[i];
+
+    if (dirContents.indexOf(pathName) === -1) {
+      return callback(new Error('Table path is not a valid KFS instance'));
+    }
+  }
+
+  callback(null);
+};
+
+/**
+ * Determine the {@link Sbucket} index for a given key
+ * @private
+ * @param {String} key - The data key to route
+ * @returns {Number}
+ */
+Btable.prototype._getSbucketIndexForKey = function(key) {
+  return this._rid[0] ^ Buffer(key, 'hex')[0];
+};
+
+/**
+ * Get the {@link Sbucket} for the supplied index
+ * @private
+ * @param {Number} sBucketIndex - The index for the desired bucket
+ * @returns {Sbucket}
+ */
+Btable.prototype._getSbucketAtIndex = function(sBucketIndex) {
+  assert(sBucketIndex &lt; constants.B, 'Index must not be greater than B');
+  assert(sBucketIndex > -1, 'Index must be greater than or equal to 0');
+
+  if (this._sBuckets[sBucketIndex]) {
+    return this._sBuckets[sBucketIndex];
+  }
+
+  this._sBuckets[sBucketIndex] = new Sbucket(
+    path.join(this._tablePath, utils.createSbucketNameFromIndex(sBucketIndex)),
+    this._options.sBucketOpts
+  );
+
+  return this._sBuckets[sBucketIndex];
+};
+
+/**
+ * Get the {@link Sbucket} for the given key
+ * @param {String} key - The key that maps to a {@link Sbucket}
+ * @param {Btable~getSbucketForKeyCallback}
+ */
+Btable.prototype.getSbucketForKey = function(key, callback) {
+  var sBucket = this._getSbucketAtIndex(this._getSbucketIndexForKey(key));
+
+  if (sBucket.readyState !== Sbucket.OPENED) {
+    return sBucket.open(function(err) {
+      if (err) {
+        return callback(err);
+      }
+
+      callback(null, sBucket);
+    });
+  }
+
+  callback(null, sBucket);
+};
+/**
+ * @callback Btable~getSbucketForKeyCallback
+ * @param {Error} [error]
+ * @param {Sbucket} sBucket
+ */
+
+/**
+ * Determine the space in bytes available to store a value at the key
+ * @param {String} key - The key for the data to store
+ * @param {Btable~getSpaceAvailableForKeyCallback}
+ */
+Btable.prototype.getSpaceAvailableForKey = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    sBucket.stat(function(err, stat) {
+      if (err) {
+        return callback(err);
+      }
+
+      // TODO: Manage completion state
+
+      callback(null, stat.free);
+    });
+  });
+};
+/**
+ * @callback Btable~getSpaceAvailableForKeyCallback
+ * @param {Error} [error]
+ * @param {Number} spaceAvailable - The free space left in bytes
+ */
+
+/**
+ * Check if a file exists at the supplied key
+ * @param {String} key - The key to check for existence
+ * @param {Sbucket~existsCallback}
+ */
+Btable.prototype.exists = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    sBucket.exists(key, callback); // TODO: Manage completion state
+  });
+};
+
+/**
+ * Unlinks the data for the given key
+ * @param {String} key - The key to unlink data from
+ * @param {Sbucket~unlinkCallback}
+ */
+Btable.prototype.unlink = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    sBucket.unlink(key, callback); // TODO: Manage completion state
+  });
+};
+
+/**
+ * Reads the data at the supplied key into a buffer
+ * @param {String} key - The key for the data to read
+ * @param {Sbucket~readFileCallback}
+ */
+Btable.prototype.readFile = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    sBucket.readFile(key, callback); // TODO: Manage completion state
+  });
+};
+
+/**
+ * Creates a readable stream of the data at the given key
+ * @param {String} key - The key for the data read
+ * @param {Btable~createReadStreamCallback}
+ */
+Btable.prototype.createReadStream = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    var rs = sBucket.createReadStream(key);
+
+    // TODO: Manage completion state
+
+    callback(null, rs);
+  });
+};
+/**
+ * @callback Btable~createReadStreamCallback
+ * @param {Error} [error]
+ * @param {ReadableStream} readStream
+ */
+
+/**
+ * Writes the given buffer to the key
+ * @param {String} key - The key to write the data to
+ * @param {Buffer} buffer - The raw buffer to write to the key
+ * @param {Sbucket~writeFileCallback}
+ */
+Btable.prototype.writeFile = function(key, buffer, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    sBucket.writeFile(key, buffer, callback); // TODO: Manage completion state
+  });
+};
+
+/**
+ * Creates a writable stream to the given key
+ * @param {String} key - The key to write the data to
+ * @param {Btable~createWriteStreamCallback}
+ */
+Btable.prototype.createWriteStream = function(key, callback) {
+  this.getSbucketForKey(key, function(err, sBucket) {
+    if (err) {
+      return callback(err);
+    }
+
+    var ws = sBucket.createWriteStream(key);
+
+    // TODO: Manage completion state
+
+    callback(null, ws);
+  });
+};
+/**
+ * @callback Btable~createWriteStreamCallback
+ * @param {Error} [error]
+ * @param {WritableStream} writeStream
+ */
+
+module.exports = Btable;
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+<div class="modal fade" id="searchResults">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Search results</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<footer>
+
+
+	<span class="copyright">
+	Copyright 2016 Gordon Hall
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+<script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			var id = $( heading ).attr( "id" );
+			return id && id.replace(/\~/g, '-inner-').replace(/\./g, '-static-') || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		SearcherDisplay.init();
+	});
+</script>
+
+</body>
+</html>
