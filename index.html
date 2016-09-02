@@ -118,7 +118,7 @@ and algorithm used by the <a href="https://en.wikipedia.org/wiki/Kademlia" title
 <h3>Command Line Interface (Global Installation)</h3><pre class="prettyprint source"><code>npm install kfs --global</code></pre><p>This will link the <code>kfs</code> and <code>kfsd</code> programs to your $PATH, which provide the 
 command line client and daemon respectively.</p>
 <h3>Programmatic (Local Installation)</h3><pre class="prettyprint source"><code>npm install kfs --save</code></pre><p>This will install <code>kfs</code> as a dependency of your own project. See the 
-<a href="doc/" title="Package Documentation">documentation</a> for usage details.</p>
+<a href="http://bookch.in/kfs/" title="Package Documentation">documentation</a> for usage details.</p>
 <h2>Motivation</h2><p>The Storj network consists of a number of distributed peers who provide 
 storage capacity for lease to others. In its current implementation, these 
 nodes store encrypted shards and their associated metadata in a <a href="http://leveldb.org/" title="LevelDB">LevelDB</a>. 
@@ -161,24 +161,7 @@ fixed size, <code>S</code>, in bytes. This means that a KFS database has a maxim
 <code>B * S</code> bytes. Once an S-Bucket is full, no more data can be placed in it. Once 
 a KFS database is full, another should be created using a new Reference ID. 
 Given the default constants, KFS databases are capped at a maximum of 8TiB each.</p>
-<p>A visual example is illustrated below:</p>
-<pre class="prettyprint source"><code>
-                S-Buckets (total of B columns)
-
-|  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 255 |
-|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
-|     |     |XXXXX|     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |XXXXX|XXXXX|XXXXX|     |XXXXX|
-|     |     |     |     |     |     |     |     |XXXXX|     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-|     |     |     |     |     |     |     |     |     |     |     |XXXXX|
-   ^                                                                 ^
-S-Bucket created/opened                          * &quot;Hot Spots&quot; can be left open
-only when it is needed                           *  When bucket full, relay the 
-                                                    opportunity to neighbors</code></pre><h3>Keying Data by Chunks</h3><p>To optimize the efficiency of reads and writes in KFS, data is stored in <code>C</code> 
+<h3>Keying Data by Chunks</h3><p>To optimize the efficiency of reads and writes in KFS, data is stored in <code>C</code> 
 sized chunks (or less), keyed by the full content's hash, followed by a 
 space and a numerical index. This is performed to ensure that key/value pairs 
 are small and that reading and writing data to and from a S-Bucket is done 
@@ -204,9 +187,12 @@ database.</p>
 <p>Due to the nature of Kademlia's metric for determining distance, buckets will
 fill approximately evenly. The result of the XOR operation on the pseudo-random 
 first bytes of the reference ID and hash should give any given bucket a
-relatively even chance of receiving any given file. As the node approaches 
-capacity, some buckets will fill sooner than others. Offers that would be sorted
-into these buckets should be declined and relayed to other nodes.</p>
+relatively even chance of receiving any given file. </p>
+<p>Below is the frequency distribution plotted with one million simulated calculations.
+As expected the distribution is uniform: </p>
+<p><img src="doc/img/xor_metric_distribution.png" alt="Frequency Distribution"></p>
+<p>Even with a uniform distribution, as the node reaches capacity some buckets will fill sooner than others. 
+Offers that would be sorted into these buckets should be declined and relayed to other nodes.</p>
 <h2>Constants</h2><table>
 <thead>
 <tr>
