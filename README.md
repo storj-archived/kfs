@@ -3,6 +3,11 @@ KFS
 
 KFS is a local file storage system inspired by Kademlia.
 
+[![Build Status](https://img.shields.io/travis/bookchin/kfs.svg?style=flat-square)](https://travis-ci.org/bookchin/kfs)
+[![Coverage Status](https://img.shields.io/coveralls/bookchin/kfs.svg?style=flat-square)](https://coveralls.io/r/bookchin/kfs)
+[![NPM](https://img.shields.io/npm/v/kfs.svg?style=flat-square)](https://www.npmjs.com/package/kfs)
+[![License](https://img.shields.io/badge/license-GPL3.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/bookchin/kfs/master/LICENSE)
+
 The KFS system describes a method for managing the storage layer of nodes on 
 the [Storj Network] by creating a sharded local database where 
 content-addressable data is placed in a shard using the same routing metric
