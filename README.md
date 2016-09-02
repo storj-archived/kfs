@@ -126,9 +126,7 @@ the S-bucket.
 Since LevelDB sorts items lexicographically, keys for data chunks should be 
 strings and consist of:
 
-```
-Hexidecimal(Hash) + ' ' + 00000N
-```
+> Hexidecimal(Hash) + ' ' + 00000N
 
 The number of preceding zeroes in the numerical index should be set such that 
 a S-Bucket that contains only a single file split into `C` sized chunks  can 

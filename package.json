@@ -12,7 +12,8 @@
     "testsuite": "mocha test/** --recursive",
     "linter": "jshint --config .jshintrc ./index.js ./lib ./test",
     "coverage": "istanbul cover _mocha -- --recursive",
-    "generate-docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
+    "generate-docs": "mkdir -p ./jsdoc && rm -r ./jsdoc && jsdoc index.js lib -r -R README.md -u ./doc -c .jsdoc.json --verbose -d ./jsdoc && cp -r doc/img jsdoc/img",
+    "deploy-docs": "ghpages -d jsdoc"
   },
   "repository": {
     "type": "git",
@@ -42,10 +43,11 @@
   },
   "devDependencies": {
     "coveralls": "^2.11.12",
+    "gh-pages": "^0.11.0",
+    "ink-docstrap": "^1.2.1",
     "istanbul": "^0.4.5",
     "jsdoc": "^3.4.0",
     "jshint": "^2.9.3",
-    "minami": "^1.1.1",
     "mocha": "^3.0.2"
   }
 }

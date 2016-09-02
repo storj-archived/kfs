@@ -1,26 +1,20 @@
 {
-  "tags": {
-    "allowUnknownTags": true,
-    "dictionaries": ["jsdoc"]
-  },
-  "source": {
-    "include": ["lib", "package.json", "README.md"],
-    "includePattern": ".js$",
-    "excludePattern": "(node_modules/|jsodoc)"
-  },
-  "plugins": [
-    "plugins/markdown"
-  ],
-  "templates": {
-    "cleverLinks": false,
-    "monospaceLinks": true,
-    "useLongnameInNav": false
-  },
   "opts": {
-    "destination": "./jsdoc/",
-    "encoding": "utf8",
-    "private": true,
-    "recurse": true,
-    "template": "./node_modules/minami"
+    "template": "node_modules/ink-docstrap/template"
+  },
+  "templates": {
+    "systemName": "KFS",
+    "copyright":  "Copyright 2016 Gordon Hall",
+    "includeDate": false,
+    "navType": "vertical",
+    "theme": "lumen",
+    "linenums": false,
+    "collapseSymbols": false,
+    "inverseNav": true,
+    "outputSourceFiles": true,
+    "outputSourcePath": true,
+    "dateFormat": "",
+    "sort": "longname",
+    "syntaxTheme": "dark"
   }
 }
