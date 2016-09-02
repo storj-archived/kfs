@@ -149,7 +149,7 @@ relatively even chance of receiving any given file.
 Below is the frequency distribution plotted with one million simulated calculations.
 As expected the distribution is uniform: 
 
-![Frequency Distribution](https://github.com/pgerbes1/kfs/raw/master/img/xor_metric_distribution.png)
+![Frequency Distribution](https://github.com/pgerbes1/kfs/raw/master/doc/img/xor_metric_distribution.png)
 
 Even with a uniform distribution, as the node reaches capacity some buckets will fill sooner than others. 
 Offers that would be sorted into these buckets should be declined and relayed to other nodes.
