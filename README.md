@@ -1,5 +1,7 @@
-KFS - A Local File Storage System Inspired by Kademlia
-======================================================
+KFS
+===
+
+KFS is a local file storage system inspired by Kademlia.
 
 The KFS system describes a method for managing the storage layer of nodes on 
 the [Storj Network] by creating a sharded local database where 
@@ -67,28 +69,28 @@ Mechanics
 ### S-Buckets and Routing
 
 KFS requires that there be a reference identifier, which can be any arbitrary 
-`B` bit key. This can be randomly generated upon creation of the database or 
+`R` bit key. This can be randomly generated upon creation of the database or 
 derived from some other application or protocol specific information. In the 
 Storj network, nodes are addressed with a 160 bit node identifier derived from 
 the public portion of an ECDSA key pair. This *Reference ID* is used to 
 calculate the database shard or *S-Bucket* to which a given piece of data 
 belongs. Collectively, these S-Buckets form the *B-Table*.
 
-In KFS, there are a total of 256 S-Buckets, numbered 0-255. To determine which
-bucket a piece of raw binary data belongs in, calculate the [distance] between 
-the first byte of the hash of the data and the first byte of the reference ID.
-This is to say that if the distance between those bytes is 137, then the raw
-binary data should be stored in S-Bucket 137. An S-Bucket has a fixed size, 
-`S`, in bytes. This means that a KFS database has a maximum size of `256 * S` 
-bytes. Once an S-Bucket is full, no more data can be placed in it. Once a KFS 
-database is full, another should be created using a new Reference ID. Given 
-the default constants, KFS databases are capped at a maximum of 8TiB each.
+In KFS, there are a total of `B` S-Buckets, numbered `0`-`B-1`. To determine 
+which bucket a piece of raw binary data belongs in, calculate the [distance] 
+between the first byte of the hash of the data and the first byte of the 
+reference ID. This is to say that if the distance between those bytes is 137, 
+then the raw binary data should be stored in S-Bucket 137. An S-Bucket has a 
+fixed size, `S`, in bytes. This means that a KFS database has a maximum size of 
+`B * S` bytes. Once an S-Bucket is full, no more data can be placed in it. Once 
+a KFS database is full, another should be created using a new Reference ID. 
+Given the default constants, KFS databases are capped at a maximum of 8TiB each.
 
 A visual example is illustrated below:
 
 ```
 
-                S-Buckets
+                S-Buckets (total of B columns)
 
 |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | ... | 255 |
 |-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
@@ -126,13 +128,13 @@ Hexidecimal(Hash) + ' ' + 00000N
 The number of preceding zeroes in the numerical index should be set such that 
 a S-Bucket that contains only a single file split into `C` sized chunks  can 
 still be read sequentially from the database. Using the default constants 
-would make the highest number index 838861, so the number of leading zeroes 
+would make the highest number index 524288, so the number of leading zeroes 
 should be less than or equal to five.
 
 ### Ad-Hoc S-Bucket Initialization
 
 Given the low cost of creating and opening a LevelDB, it is not necessary to 
-create all 256 S-Buckets at once. Instead, an S-Bucket can be created the first 
+create all `B` S-Buckets at once. Instead, an S-Bucket can be created the first 
 time data is to be stored inside of it. Additionally, S-Buckets can be opened 
 and closed as needed, eliminating the potential overhead of opening a large 
 number of file descriptors. Operations on a given S-Bucket should be added to 
@@ -149,11 +151,12 @@ into these buckets should be declined and relayed to other nodes.
 Constants
 ---------
 
-| Name | Description                       | Default               |
-|------|-----------------------------------|-----------------------|
-| B    | Number of bits in Reference ID    | 160                   |
-| S    | Size (in gibibytes) of an S-Bucket| 32                    |
-| C    | Size (in bytes) of a file chunk   | 65536                 |
+| Name | Description                        | Default               |
+|------|------------------------------------|-----------------------|
+| B    | Number of columns in the B-table   | 256                   |
+| S    | Size (in bytes) of an S-Bucket     | 34359738368 (32GiB)   |
+| C    | Size (in bytes) of a file chunk    | 65536                 |
+| R    | Number of bits in the Reference ID | 160                   |
 
 Considerations Specific to Storj
 --------------------------------
