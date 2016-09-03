@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -123,6 +123,7 @@ function Sbucket(dbPath, options) {
 
   this._options = merge(Object.create(Sbucket.DEFAULTS), options);
   this._db = leveldown(dbPath);
+  this._pendingOperations = 0;
   this.readyState = Sbucket.CLOSED;
 }
 
@@ -136,6 +137,11 @@ inherits(Sbucket, events.EventEmitter);
 /**
  * Triggered when the underlying database closes
  * @event Sbucket#close
+ */
+
+/**
+ * Triggered when there are no more pending operations
+ * @event Sbucket#idle
  */
 
 Sbucket.CLOSED = 4;
@@ -253,7 +259,11 @@ Sbucket.prototype.close = function(callback) {
  * @param {Sbucket~existsCallback}
  */
 Sbucket.prototype.exists = function(key, callback) {
+  var self = this;
+
+  this._incPendingOps();
   this._db.get(utils.createItemKeyFromIndex(key, 0), function(err) {
+    self._decPendingOps();
     callback(!err);
   });
 };
@@ -282,13 +292,16 @@ Sbucket.prototype.unlink = function(key, callback) {
           _del(index, callback);
         });
       } else if (err.type === 'NotFoundError') {
+        self._decPendingOps();
         callback(null);
       } else {
+        self._decPendingOps();
         callback(err);
       }
     });
   }
 
+  this._incPendingOps();
   _del(index, callback);
 };
 /**
@@ -302,6 +315,7 @@ Sbucket.prototype.unlink = function(key, callback) {
  * @param {Sbucket~readFileCallback}
  */
 Sbucket.prototype.readFile = function(key, callback) {
+  var self = this;
   var fileBuffer = new Buffer([], 'binary');
   var readStream = this.createReadStream(key);
 
@@ -310,13 +324,17 @@ Sbucket.prototype.readFile = function(key, callback) {
   });
 
   readStream.on('end', function() {
+    self._decPendingOps();
     callback(null, fileBuffer);
   });
 
   readStream.on('error', function(err) {
+    self._decPendingOps();
     readStream.removeAllListeners();
     callback(err);
   });
+
+  this._incPendingOps();
 };
 /**
  * @callback Sbucket~readFileCallback
@@ -331,6 +349,7 @@ Sbucket.prototype.readFile = function(key, callback) {
  * @param {Sbucket~writeFileCallback}
  */
 Sbucket.prototype.writeFile = function(key, buffer, callback) {
+  var self = this;
   var writeStream = this.createWriteStream(key);
   var whichSlice = 0;
 
@@ -348,14 +367,17 @@ Sbucket.prototype.writeFile = function(key, buffer, callback) {
   }
 
   writeStream.on('finish', function() {
+    self._decPendingOps();
     callback(null);
   });
 
   writeStream.on('error', function(err) {
+    self._decPendingOps();
     writeStream.removeAllListeners();
     callback(err);
   });
 
+  this._incPendingOps();
   this.unlink(key, function(err) {
     if (err) {
       return callback(err);
@@ -375,10 +397,13 @@ Sbucket.prototype.writeFile = function(key, buffer, callback) {
  * @returns {ReadableFileStream}
  */
 Sbucket.prototype.createReadStream = function(key) {
-  return new ReadableFileStream({
+  var rs = new ReadableFileStream({
     sBucket: this,
     fileKey: key
   });
+
+  this._incPendingOps();
+  rs.on('end', this._decPendingOps.bind(this));
 };
 
 /**
@@ -387,10 +412,15 @@ Sbucket.prototype.createReadStream = function(key) {
  * @returns {WritableFileStream}
  */
 Sbucket.prototype.createWriteStream = function(key) {
-  return new WritableFileStream({
+  var ws = new WritableFileStream({
     sBucket: this,
     fileKey: key
   });
+
+  this._incPendingOps();
+  ws.on('finish', this._decPendingOps.bind(this));
+
+  return ws;
 };
 
 /**
@@ -398,10 +428,15 @@ Sbucket.prototype.createWriteStream = function(key) {
  * @param {Sbucket~statCallback}
  */
 Sbucket.prototype.stat = function(callback) {
+  var self = this;
+
+  this._incPendingOps();
   this._db.approximateSize(
     Sbucket.SIZE_START_KEY,
     Sbucket.SIZE_END_KEY,
     function(err, size) {
+      self._decPendingOps();
+
       if (err) {
         return callback(err);
       }
@@ -420,6 +455,33 @@ Sbucket.prototype.stat = function(callback) {
  * @param {Number} bucketStats.size - The used space in bytes
  * @param {Number} bucketStats.free - The free space left in bytes
  */
+
+/**
+ * Increments the pending operations counter
+ * @private
+ */
+Sbucket.prototype._incPendingOps = function() {
+  this._pendingOperations++;
+};
+
+/**
+ * Decrements the pending operations counter
+ * @private
+ * @fires Sbucket#idle
+ */
+Sbucket.prototype._decPendingOps = function() {
+  var self = this;
+
+  function _checkIdleState() {
+    if (self._pendingOperations === 0) {
+      self.emit('idle');
+    }
+  }
+
+  this._pendingOperations--;
+
+  setImmediate(_checkIdleState);
+};
 
 module.exports = Sbucket;
 </pre>

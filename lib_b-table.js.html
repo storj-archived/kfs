@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -248,15 +248,20 @@ Btable.prototype._getSbucketAtIndex = function(sBucketIndex) {
     this._options.sBucketOpts
   );
 
+  this._sBuckets[sBucketIndex].on('idle', function() {
+    this.close();
+  });
+
   return this._sBuckets[sBucketIndex];
 };
 
 /**
  * Get the {@link Sbucket} for the given key
+ * @private
  * @param {String} key - The key that maps to a {@link Sbucket}
- * @param {Btable~getSbucketForKeyCallback}
+ * @param {Btable~_getSbucketForKeyCallback}
  */
-Btable.prototype.getSbucketForKey = function(key, callback) {
+Btable.prototype._getSbucketForKey = function(key, callback) {
   var sBucket = this._getSbucketAtIndex(this._getSbucketIndexForKey(key));
 
   if (sBucket.readyState !== Sbucket.OPENED) {
@@ -272,7 +277,8 @@ Btable.prototype.getSbucketForKey = function(key, callback) {
   callback(null, sBucket);
 };
 /**
- * @callback Btable~getSbucketForKeyCallback
+ * @private
+ * @callback Btable~_getSbucketForKeyCallback
  * @param {Error} [error]
  * @param {Sbucket} sBucket
  */
@@ -283,7 +289,7 @@ Btable.prototype.getSbucketForKey = function(key, callback) {
  * @param {Btable~getSpaceAvailableForKeyCallback}
  */
 Btable.prototype.getSpaceAvailableForKey = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
@@ -292,8 +298,6 @@ Btable.prototype.getSpaceAvailableForKey = function(key, callback) {
       if (err) {
         return callback(err);
       }
-
-      // TODO: Manage completion state
 
       callback(null, stat.free);
     });
@@ -311,12 +315,12 @@ Btable.prototype.getSpaceAvailableForKey = function(key, callback) {
  * @param {Sbucket~existsCallback}
  */
 Btable.prototype.exists = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    sBucket.exists(key, callback); // TODO: Manage completion state
+    sBucket.exists(key, callback);
   });
 };
 
@@ -326,12 +330,12 @@ Btable.prototype.exists = function(key, callback) {
  * @param {Sbucket~unlinkCallback}
  */
 Btable.prototype.unlink = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    sBucket.unlink(key, callback); // TODO: Manage completion state
+    sBucket.unlink(key, callback);
   });
 };
 
@@ -341,12 +345,12 @@ Btable.prototype.unlink = function(key, callback) {
  * @param {Sbucket~readFileCallback}
  */
 Btable.prototype.readFile = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    sBucket.readFile(key, callback); // TODO: Manage completion state
+    sBucket.readFile(key, callback);
   });
 };
 
@@ -356,16 +360,12 @@ Btable.prototype.readFile = function(key, callback) {
  * @param {Btable~createReadStreamCallback}
  */
 Btable.prototype.createReadStream = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    var rs = sBucket.createReadStream(key);
-
-    // TODO: Manage completion state
-
-    callback(null, rs);
+    callback(null, sBucket.createReadStream(key));
   });
 };
 /**
@@ -381,12 +381,12 @@ Btable.prototype.createReadStream = function(key, callback) {
  * @param {Sbucket~writeFileCallback}
  */
 Btable.prototype.writeFile = function(key, buffer, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    sBucket.writeFile(key, buffer, callback); // TODO: Manage completion state
+    sBucket.writeFile(key, buffer, callback);
   });
 };
 
@@ -396,16 +396,12 @@ Btable.prototype.writeFile = function(key, buffer, callback) {
  * @param {Btable~createWriteStreamCallback}
  */
 Btable.prototype.createWriteStream = function(key, callback) {
-  this.getSbucketForKey(key, function(err, sBucket) {
+  this._getSbucketForKey(key, function(err, sBucket) {
     if (err) {
       return callback(err);
     }
 
-    var ws = sBucket.createWriteStream(key);
-
-    // TODO: Manage completion state
-
-    callback(null, ws);
+    callback(null, sBucket.createWriteStream(key));
   });
 };
 /**
