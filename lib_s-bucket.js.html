@@ -40,14 +40,14 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html">Btable</a></li><li><a href="Sbucket.html">Sbucket</a></li>
+					<li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li>
+					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -92,12 +92,13 @@
             class="sunlight-highlight-javascript ">'use strict';
 
 var merge = require('merge');
-var stream = require('readable-stream');
 var leveldown = require('leveldown');
 var inherits = require('util').inherits;
 var events = require('events');
 var constants = require('./constants');
 var utils = require('./utils');
+var WritableFileStream = require('./write-stream');
+var ReadableFileStream = require('./read-stream');
 
 /**
  * Capped LevelDB database within a {@link Btable}
@@ -371,60 +372,25 @@ Sbucket.prototype.writeFile = function(key, buffer, callback) {
 /**
  * Returns a readable stream of the file at the given key
  * @param {String} key - The key for the file to read
- * @returns {ReadableStream}
+ * @returns {ReadableFileStream}
  */
 Sbucket.prototype.createReadStream = function(key) {
-  var self = this;
-  var index = 0;
-
-  return this._decorateStreamWithDestroy(key, new stream.Readable({
-    read: function() {
-      var rs = this;
-
-      self._db.get(
-        utils.createItemKeyFromIndex(key, index),
-        function(err, result) {
-          if (err) {
-            if (err.type === 'NotFoundError') {
-              return rs.push(null);
-            } else {
-              return rs.emit('error', err);
-            }
-          }
-
-          index++;
-          rs.push(Buffer(result, 'binary'));
-        }
-      );
-    }
-  }));
+  return new ReadableFileStream({
+    sBucket: this,
+    fileKey: key
+  });
 };
 
 /**
  * Returns a writable stream for a file at the given key
  * @param {String} key - The key for the file to read
- * @returns {WritableStream}
+ * @returns {WritableFileStream}
  */
 Sbucket.prototype.createWriteStream = function(key) {
-  var self = this;
-  var index = 0;
-
-  return this._decorateStreamWithDestroy(key, new stream.Writable({
-    write: function(bytes, encoding, callback) {
-      self._db.put(
-        utils.createItemKeyFromIndex(key, index),
-        bytes,
-        function(err) {
-          if (err) {
-            return callback(err);
-          }
-
-          index++;
-          callback();
-        }
-      );
-    }
-  }));
+  return new WritableFileStream({
+    sBucket: this,
+    fileKey: key
+  });
 };
 
 /**
@@ -454,31 +420,6 @@ Sbucket.prototype.stat = function(callback) {
  * @param {Number} bucketStats.size - The used space in bytes
  * @param {Number} bucketStats.free - The free space left in bytes
  */
-
-/**
- * Decorates a stream with a destroy method to remove any data written
- * @private
- * @param {String} key
- * @param {Stream} stream
- */
-Sbucket.prototype._decorateStreamWithDestroy = function(key, stream) {
-  var self = this;
-
-  stream.destroy = function(callback) {
-    self.unlink(key, callback || utils.noop);
-  };
-
-  return stream;
-};
-
-/**
- * Checks if the levelup backend is using leveldown
- * @private
- * @returns {Boolean}
- */
-Sbucket.prototype._isUsingDefaultBackend = function() {
-  return this._options.levelupBackend === Sbucket.DEFAULTS.levelupBackend;
-};
 
 module.exports = Sbucket;
 </pre>
