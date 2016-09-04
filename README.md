@@ -18,17 +18,6 @@ Quick Start
 
 Install the `kfs` package using [Node Package Manager].
 
-### Command Line Interface (Global Installation)
-
-```
-npm install kfs --global
-```
-
-This will link the `kfs` and `kfsd` programs to your $PATH, which provide the 
-command line client and daemon respectively.
-
-### Programmatic (Local Installation)
-
 ```
 npm install kfs --save
 ```
