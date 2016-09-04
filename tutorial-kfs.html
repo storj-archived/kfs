@@ -108,7 +108,7 @@ myDataStore.exists(some160bitKey, function(exists) {
 <a href="Btable.html#getSpaceAvailableForKey">Btable#getSpaceAvailableForKey</a> method:</p>
 <pre class="prettyprint source"><code>var fileSizeInBytes = 4096;
 
-myDataStore.getSpaceAvailableForKey(fileSizeInBytes, function(err, freeSpace) {
+myDataStore.getSpaceAvailableForKey(some160bitKey, function(err, freeSpace) {
   if (err) {
     // handle error
   }
