@@ -35,7 +35,7 @@ To check the available space for a file at a given key, use the
 ```
 var fileSizeInBytes = 4096;
 
-myDataStore.getSpaceAvailableForKey(fileSizeInBytes, function(err, freeSpace) {
+myDataStore.getSpaceAvailableForKey(some160bitKey, function(err, freeSpace) {
   if (err) {
     // handle error
   }
