@@ -1,7 +1,7 @@
 This tutorial covers everything you need to know about using KFS within your 
 application. KFS is based on LevelDB, an embedded key-value store, but the 
 interface for interacting with a KFS is focused on the storage and retrieval 
-of files are arbitrary binary streams.
+of files and arbitrary binary streams.
 
 ### Getting Started
 
