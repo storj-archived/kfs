@@ -148,7 +148,7 @@ ReadableFileStream.prototype._read = function() {
     utils.createItemKeyFromIndex(this._fileKey, this._index),
     function(err, result) {
       if (err) {
-        if (err.type === 'NotFoundError') {
+        if (utils.isNotFoundError(err)) {
           return self.push(null);
         } else {
           return self.emit('error', err);

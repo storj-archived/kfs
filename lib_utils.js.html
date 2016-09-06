@@ -192,6 +192,15 @@ module.exports.coerceTablePath = function(tablePath) {
 
   return tablePath;
 };
+
+/**
+ * Determines if the passed error object is a NotFound error
+ * @param {Error} error
+ * @returns {Boolean}
+ */
+module.exports.isNotFoundError = function(error) {
+  return error &amp;&amp; error.message.indexOf('NotFound:') !== -1;
+};
 </pre>
     </article>
 </section>
