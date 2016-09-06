@@ -9,6 +9,7 @@ var rimraf = require('rimraf');
 var mkdirp = require('mkdirp');
 var constants = require('../lib/constants');
 var crypto = require('crypto');
+var sinon = require('sinon');
 
 describe('Btable/Integration', function() {
 
@@ -37,6 +38,33 @@ describe('Btable/Integration', function() {
       });
     });
 
+    it('should callback with error if Sbucket#stat fails', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        null,
+        { stat: sinon.stub().callsArgWith(0, new Error('Failed')) }
+      );
+      var key = utils.createReferenceId().toString('hex');
+      db.getSpaceAvailableForKey(key, function(e) {
+        _getSbucketForKey.restore();
+        expect(e.message).to.equal('Failed');
+        done();
+      });
+
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.getSpaceAvailableForKey('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
   });
 
   describe('#writeFile', function() {
@@ -46,6 +74,18 @@ describe('Btable/Integration', function() {
       var fileHash = crypto.createHash('sha1').update(fileData).digest('hex');
       db.writeFile(fileHash, fileData, function(err) {
         expect(err).to.equal(null);
+        done();
+      });
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.writeFile('0000', Buffer([]), function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
         done();
       });
     });
@@ -66,6 +106,18 @@ describe('Btable/Integration', function() {
       });
     });
 
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.createWriteStream('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
   });
 
   describe('#readFile', function() {
@@ -76,6 +128,18 @@ describe('Btable/Integration', function() {
       db.readFile(fileHash, function(err, result) {
         expect(err).to.equal(null);
         expect(Buffer.compare(result, fileData)).to.equal(0);
+        done();
+      });
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.readFile('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
         done();
       });
     });
@@ -101,6 +165,18 @@ describe('Btable/Integration', function() {
       });
     });
 
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.createReadStream('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
   });
 
   describe('#exists', function() {
@@ -108,7 +184,7 @@ describe('Btable/Integration', function() {
     it('should callback true for a existing key', function(done) {
       var fileData = new Buffer('hello kfs!');
       var fileHash = crypto.createHash('sha1').update(fileData).digest('hex');
-      db.exists(fileHash, function(exists) {
+      db.exists(fileHash, function(err, exists) {
         expect(exists).to.equal(true);
         done();
       });
@@ -116,8 +192,20 @@ describe('Btable/Integration', function() {
 
     it('should callback false for non-existent key', function(done) {
       var key = utils.createReferenceId().toString('hex');
-      db.exists(key, function(exists) {
+      db.exists(key, function(err, exists) {
         expect(exists).to.equal(false);
+        done();
+      });
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.exists('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
         done();
       });
     });
@@ -131,10 +219,22 @@ describe('Btable/Integration', function() {
       var fileHash = crypto.createHash('sha1').update(fileData).digest('hex');
       db.unlink(fileHash, function(err) {
         expect(err).to.equal(null);
-        db.exists(fileHash, function(exists) {
+        db.exists(fileHash, function(err, exists) {
           expect(exists).to.equal(false);
           done();
         });
+      });
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.unlink('0000', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
       });
     });
 

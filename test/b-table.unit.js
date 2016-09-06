@@ -65,14 +65,33 @@ describe('Btable', function() {
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(false);
       Btable('');
       _fileDoesExist.restore();
-      expect(_initBtableDirectory.called).to.equal(true);
+      setImmediate(function() {
+        expect(_initBtableDirectory.called).to.equal(true);
+      });
     });
 
     it('should validate the db if it does exist', function() {
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
       Btable('');
       _fileDoesExist.restore();
-      expect(_validateTablePath.called).to.equal(true);
+      setImmediate(function() {
+        expect(_validateTablePath.called).to.equal(true);
+      });
+    });
+
+    it('should emit an error if validating table path fails', function(done) {
+      _validateTablePath.restore();
+      _validateTablePath = sinon.stub(
+        Btable.prototype,
+        '_validateTablePath'
+      ).callsArgWith(0, new Error('Failed'));
+      var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
+      var bTable = new Btable('');
+      bTable.on('error', function(err) {
+        _fileDoesExist.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
     });
 
     after(function() {
