@@ -20,6 +20,7 @@ module.exports = function(options, callback) {
     64 * (1024 * 1024),
     128 * (1024 * 1024),
     256 * (1024 * 1024),
+    512 * (1024 * 1024)
   ], function(numBytes, next) {
     console.log('Preparing %s byte file...', numBytes);
     var noise = noisegen({ length: numBytes });
@@ -38,7 +39,8 @@ module.exports = function(options, callback) {
       '2.dat',
       '3.dat',
       '4.dat',
-      '5.dat'
+      '5.dat',
+      '6.dat'
     ], function(testFileName, next) {
       var time = 0;
       var timer = setInterval(function() { time += 10 }, 10);
