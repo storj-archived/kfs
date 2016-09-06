@@ -122,7 +122,7 @@ function Btable(tablePath, options) {
   this._sBuckets = {};
   this._tablePath = utils.coerceTablePath(tablePath);
 
-  this._open();
+  setImmediate(this._open.bind(this));
 }
 
 inherits(Btable, events.EventEmitter);
