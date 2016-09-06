@@ -45,6 +45,7 @@
     "istanbul": "^0.4.5",
     "jsdoc": "^3.4.0",
     "jshint": "^2.9.3",
+    "memdown": "^1.2.0",
     "mocha": "^3.0.2",
     "proxyquire": "^1.7.10",
     "rimraf": "^2.5.4",
