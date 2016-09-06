@@ -22,7 +22,7 @@ To check if a file exists at a given key, use the {@link Btable#exists} method:
 ```
 var some160bitKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
 
-myDataStore.exists(some160bitKey, function(exists) {
+myDataStore.exists(some160bitKey, function(err, exists) {
   console.log('The file ' + (exists ? 'DOES' : 'DOES NOT') + ' exist!');
 });
 ```
