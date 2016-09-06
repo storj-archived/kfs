@@ -9,7 +9,8 @@
     "linter": "jshint --config .jshintrc ./index.js ./lib ./test",
     "coverage": "istanbul cover _mocha -- --recursive",
     "generate-docs": "mkdir -p ./jsdoc && rm -r ./jsdoc && jsdoc index.js lib -r -R README.md -u ./doc -c .jsdoc.json --verbose -d ./jsdoc && mkdir -p jsdoc/doc/img && cp -r doc/img/* jsdoc/doc/img",
-    "deploy-docs": "gh-pages -d jsdoc"
+    "deploy-docs": "gh-pages -d jsdoc",
+    "benchmark": "node perf/index.js exec"
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "jshint": "^2.9.3",
     "memdown": "^1.2.0",
     "mocha": "^3.0.2",
+    "noisegen": "^1.0.0",
     "proxyquire": "^1.7.10",
     "rimraf": "^2.5.4",
     "sinon": "^1.17.5"
