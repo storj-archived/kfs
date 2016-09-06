@@ -146,8 +146,9 @@ fill approximately evenly. The result of the XOR operation on the pseudo-random
 first bytes of the reference ID and hash should give any given bucket a
 relatively even chance of receiving any given file. 
  
-Below is the frequency distribution plotted with one million simulated calculations.
-As expected the distribution is uniform: 
+Below is the frequency distribution plotted with ten million simulated calculations.
+As expected the distribution is uniform (the red dotted line indicates the theoretical
+value each bin should have): 
 
 ![Frequency Distribution](doc/img/xor_metric_distribution.png)
 
