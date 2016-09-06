@@ -19,19 +19,120 @@ describe('Sbucket', function() {
 
   describe('#open', function() {
 
+    it('should emit an error if open fails', function(done) {
+      var sBucket = new Sbucket('');
+      var _open = sinon.stub(
+        sBucket._db,
+        'open'
+      ).callsArgWith(1, new Error('Failed'));
+      sBucket.open(function(err) {
+        _open.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
 
+    it('should not require a callback', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.on('open', done);
+      setImmediate(function() {
+        sBucket.open();
+      });
+    });
+
+    it('should emit open if already opened', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.OPENED;
+      sBucket.open(done);
+    });
+
+    it('should return if open in progress', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.OPENING;
+      sBucket.open(done);
+      setImmediate(function() {
+        sBucket.emit('open');
+      });
+    });
+
+    it('should wait until close if closing', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.CLOSING;
+      sBucket.open(done);
+      setImmediate(function() {
+        sBucket.emit('close');
+      });
+    });
 
   });
 
   describe('#close', function() {
 
+    it('should emit an error if close fails', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.OPENED;
+      var _close = sinon.stub(
+        sBucket._db,
+        'close'
+      ).callsArgWith(0, new Error('Failed'));
+      sBucket.close(function(err) {
+        _close.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
 
+    it('should not require a callback', function(done) {
+      var sBucket = new Sbucket('');
+      var _close = sinon.stub(
+        sBucket._db,
+        'close'
+      ).callsArgWith(0);
+      sBucket.readyState = Sbucket.OPENED;
+      sBucket.on('close', done);
+      setImmediate(function() {
+        sBucket.close();
+        _close.restore();
+      });
+    });
 
-  });
+    it('should emit close if already closed', function(done) {
+      var sBucket = new Sbucket('');
+      var _close = sinon.stub(
+        sBucket._db,
+        'close'
+      ).callsArgWith(0);
+      sBucket.close(function() {
+        _close.restore();
+        done();
+      });
+    });
 
-  describe('#unlink', function() {
+    it('should return if close in progress', function(done) {
+      var sBucket = new Sbucket('');
+      var _close = sinon.stub(
+        sBucket._db,
+        'close'
+      ).callsArgWith(0);sBucket.readyState = Sbucket.CLOSING;
+      sBucket.close(done);
+      setImmediate(function() {
+        sBucket.emit('close');
+        _close.restore();
+      });
+    });
 
-
+    it('should wait until open if opening', function(done) {
+      var sBucket = new Sbucket('');
+      var _close = sinon.stub(
+        sBucket._db,
+        'close'
+      ).callsArgWith(0);sBucket.readyState = Sbucket.OPENING;
+      sBucket.close(done);
+      setImmediate(function() {
+        sBucket.emit('open');
+        _close.restore();
+      });
+    });
 
   });
 
