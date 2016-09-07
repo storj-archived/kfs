@@ -7,9 +7,7 @@ module.exports = function(options, wResults, callback) {
   console.log('Starting read tests from previously written data...');
 
   var results = [];
-  var database = kfs(options.tablePath, {
-    referenceId: options.referenceId
-  });
+  var database = options.bTable;
 
   async.eachOfSeries(wResults, function(writeResultItem, i, next) {
     database.createReadStream(writeResultItem.fileKey, function(err, stream) {

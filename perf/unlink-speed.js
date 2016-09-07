@@ -7,9 +7,7 @@ module.exports = function(options, wResults, rResults, callback) {
   console.log('Unlinking (deleting) data written to database...');
 
   var results = [];
-  var database = kfs(options.tablePath, {
-    referenceId: options.referenceId
-  });
+  var database = options.bTable;
 
   async.eachOfSeries(rResults, function(readResultItem, i, next) {
     var time = 0;

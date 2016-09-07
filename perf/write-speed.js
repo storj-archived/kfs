@@ -10,9 +10,7 @@ module.exports = function(options, callback) {
   console.log('Generating some random files, hold on...');
 
   var results = [];
-  var database = kfs(options.tablePath, {
-    referenceId: options.referenceId
-  });
+  var database = options.bTable;
   var index = 0;
 
   async.eachSeries([
