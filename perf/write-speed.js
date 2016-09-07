@@ -10,7 +10,9 @@ module.exports = function(options, callback) {
   console.log('Generating some random files, hold on...');
 
   var results = [];
-  var database = kfs(options.tablePath);
+  var database = kfs(options.tablePath, {
+    referenceId: options.referenceId
+  });
   var index = 0;
 
   async.eachSeries([
@@ -24,12 +26,16 @@ module.exports = function(options, callback) {
   ], function(numBytes, next) {
     console.log('Preparing %s byte file...', numBytes);
     var noise = noisegen({ length: numBytes });
-    var file = fs.createWriteStream(
-      path.join(options.tmpPath, index.toString() + '.dat')
-    );
+    var testPath = path.join(options.tmpPath, index.toString() + '.dat');
+
     index++;
 
-    noise.pipe(file).on('error', next).on('finish', next);
+    if (!kfs.utils.fileDoesExist(testPath)) {
+      var file = fs.createWriteStream(testPath);
+      noise.pipe(file).on('error', next).on('finish', next);
+    } else {
+      next();
+    }
   }, function(err) {
     console.log('Test files prepared, writing to KFS...')
 
@@ -45,6 +51,7 @@ module.exports = function(options, callback) {
       var time = 0;
       var timer = setInterval(function() { time += 10 }, 10);
       var key = kfs.utils.createReferenceId().toString('hex');
+      var pathToTestFile = path.join(options.tmpPath, testFileName);
 
       database.createWriteStream(key, function(err, writeStream) {
         if (err) {
@@ -52,7 +59,7 @@ module.exports = function(options, callback) {
         }
 
         fs.createReadStream(
-          path.join(options.tmpPath, testFileName)
+          pathToTestFile
         ).pipe(writeStream).on('error', function(err) {
           clearInterval(timer);
           next(err);
@@ -62,9 +69,7 @@ module.exports = function(options, callback) {
             msElapsed: time,
             fileKey: key,
             sBucketIndex: database._getSbucketIndexForKey(key),
-            fileSizeBytes: fs.statSync(
-              path.join(options.tmpPath, testFileName)
-            ).size
+            fileSizeBytes: fs.statSync(pathToTestFile).size
           });
           next();
         });
