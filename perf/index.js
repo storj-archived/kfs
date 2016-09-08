@@ -49,7 +49,10 @@ if (process.argv[2] === 'exec') {
   var resultsOut = process.argv[4];
   var referenceId = kfs.utils.createReferenceId().toString('hex');
 
-  var TMP_PATH = path.join(os.tmpdir(), 'KFS_PERF_SANDBOX');
+  var TMP_PATH = path.join(
+    process.env.KFS_PERF_DIR || os.tmpdir(),
+    'KFS_PERF_SANDBOX'
+  );
   var TABLE_PATH = path.join(TMP_PATH, Date.now().toString());
 
   if (kfs.utils.fileDoesExist(TMP_PATH)) {
