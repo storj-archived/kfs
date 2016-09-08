@@ -62,6 +62,8 @@ if (process.argv[2] === 'exec') {
   var results = [];
 
   function runBenchmarkTests() {
+    console.log('Running test %s', testsRun + 1);
+
     module.exports({
       tmpPath: TMP_PATH,
       tablePath: TABLE_PATH,
