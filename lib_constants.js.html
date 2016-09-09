@@ -54,7 +54,7 @@
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="tutorial-kfs.html">HOWTO: Using KFS</a></li>
+					<li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Usage</a></li>
 				</ul>
 			</li>
 			
@@ -103,7 +103,9 @@ module.exports = {
   /** @constant {Number} S - Number of bytes in a {@link Sbucket} */
   S: 32 * (1024 * 1024 * 1024),
   /** @constant {Number} B - Number of columns in a {@link Btable} */
-  B: 256
+  B: 256,
+  /** @constant {String} HASH - OpenSSL id for key hashing algorithm */
+  HASH: 'sha1'
 };
 </pre>
     </article>

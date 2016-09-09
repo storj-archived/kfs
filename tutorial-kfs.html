@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>KFS Tutorial: HOWTO: Using KFS</title>
+	<title>KFS Tutorial: Programmatic Usage</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -54,7 +54,7 @@
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="tutorial-kfs.html">HOWTO: Using KFS</a></li>
+					<li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Usage</a></li>
 				</ul>
 			</li>
 			
@@ -87,7 +87,7 @@
 <header>
     
 
-    <h2>HOWTO: Using KFS</h2>
+    <h2>Programmatic Usage</h2>
 </header>
 
 <article>
@@ -102,7 +102,7 @@ var myDataStore = kfs('/path/to/database.kfs');</code></pre><p>That's it, Your d
 <h3>Check if a File Exists</h3><p>To check if a file exists at a given key, use the <a href="Btable.html#exists">Btable#exists</a> method:</p>
 <pre class="prettyprint source"><code>var some160bitKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
 
-myDataStore.exists(some160bitKey, function(exists) {
+myDataStore.exists(some160bitKey, function(err, exists) {
   console.log('The file ' + (exists ? 'DOES' : 'DOES NOT') + ' exist!');
 });</code></pre><h3>Check if a File Can Be Stored</h3><p>To check the available space for a file at a given key, use the 
 <a href="Btable.html#getSpaceAvailableForKey">Btable#getSpaceAvailableForKey</a> method:</p>

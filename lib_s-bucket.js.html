@@ -54,7 +54,7 @@
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="tutorial-kfs.html">HOWTO: Using KFS</a></li>
+					<li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Usage</a></li>
 				</ul>
 			</li>
 			
@@ -121,6 +121,7 @@ function Sbucket(dbPath, options) {
 
   events.EventEmitter.call(this);
 
+  this._dbPath = dbPath;
   this._options = merge(Object.create(Sbucket.DEFAULTS), options);
   this._db = leveldown(dbPath);
   this._pendingOperations = 0;
@@ -182,11 +183,17 @@ Sbucket.prototype.open = function(callback) {
     });
   }
 
-  this.once('open', callback);
-  this.once('error', function(err) {
-    this.removeListener('open', callback);
+  function _onError(err) {
+    self.removeListener('open', _onOpen);
     callback(err);
-  });
+  }
+
+  function _onOpen() {
+    self.removeListener('error', _onError);
+    callback(null);
+  }
+
+  this.once('open', _onOpen).once('error', _onError);
 
   if (this.readyState === Sbucket.OPENED) {
     return self.emit('open');
@@ -228,11 +235,17 @@ Sbucket.prototype.close = function(callback) {
     });
   }
 
-  this.once('close', callback);
-  this.once('error', function(err) {
-    this.removeListener('close', callback);
+  function _onError(err) {
+    self.removeListener('close', _onClose);
     callback(err);
-  });
+  }
+
+  function _onClose() {
+    self.removeListener('error', _onError);
+    callback(null);
+  }
+
+  this.once('close', _onClose).once('error', _onError);
 
   if (this.readyState === Sbucket.CLOSED) {
     return self.emit('close');
