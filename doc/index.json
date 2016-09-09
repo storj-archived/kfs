@@ -1,5 +1,8 @@
 {
   "kfs": {
-    "title": "HOWTO: Using KFS"
+    "title": "Programmatic Usage"
+  },
+  "cli": {
+    "title": "Command Line Interface"
   }
 }

@@ -13,13 +13,25 @@ describe('@module:kfs/utils', function() {
 
   });
 
+  describe('#toHumanReadableSize', function() {
+
+    it('should covert the bytes to a human readable size', function() {
+      expect(utils.toHumanReadableSize(34359738368)).to.equal('32.0 GiB');
+    });
+
+    it('should return the bytes if lower than 1KiB', function() {
+      expect(utils.toHumanReadableSize(1000)).to.equal('1000 B');
+    });
+
+  });
+
   describe('#createItemKeyFromIndex', function() {
 
     it('should return the correct item key', function() {
       var fileKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
       var itemKey = utils.createItemKeyFromIndex(fileKey, 20);
       expect(itemKey).to.equal(
-        'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc 000020'
+        'a71fed10c7074575d6bf89e2d1f874b355f83c0f 000020'
       );
     });
 

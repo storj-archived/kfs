@@ -190,7 +190,7 @@ describe('Btable', function() {
         Btable.prototype._getSbucketIndexForKey.call({
           _rid: Buffer('00', 'hex')
         }, '00')
-      ).to.equal(0);
+      ).to.equal(251);
     });
 
   });
