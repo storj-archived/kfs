@@ -120,6 +120,43 @@ describe('Btable/Integration', function() {
 
   });
 
+  describe('#stat', function() {
+
+    it('should return the stats fo all buckets', function(done) {
+      db.stat(function(err, results) {
+        expect(results).to.have.lengthOf(3);
+        done();
+      });
+    });
+
+    it('should bubble errors from _getSbucketForKey', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.stat(function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+    it('should bubble errors from Sbucket#stat', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        null,
+        { stat: sinon.stub().callsArgWith(0, new Error('Failed')) }
+      );
+      db.stat(function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+
+    });
+
+  });
+
   describe('#readFile', function() {
 
     it('should read the file from the database', function(done) {

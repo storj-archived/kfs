@@ -199,4 +199,16 @@ describe('Sbucket', function() {
 
   });
 
+  describe('#listFileKeys', function() {
+
+    it.skip('should list the file keys in the bucket', function(done) {
+      done(); // TODO
+    });
+
+    it.skip('should bubble errors from the iterator', function(done) {
+      done(); // TODO
+    });
+
+  });
+
 });

@@ -13,6 +13,14 @@ describe('@module:kfs/utils', function() {
 
   });
 
+  describe('#isValidKey', function() {
+
+    it('should return false for invalid key', function() {
+      expect(utils.isValidKey({})).to.equal(false);
+    });
+
+  });
+
   describe('#toHumanReadableSize', function() {
 
     it('should covert the bytes to a human readable size', function() {
