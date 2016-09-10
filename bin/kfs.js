@@ -7,6 +7,7 @@ var program = require('commander');
 var path = require('path');
 var fs = require('fs');
 var platform = require('os').platform();
+var async = require('async');
 
 var HOME = platform !== 'win32' ? process.env.HOME : process.env.USERPROFILE;
 var DEFAULT_DB = path.join(HOME, '.kfs', 'default');
@@ -130,31 +131,115 @@ function _unlinkFileFromDatabase(fileKey) {
   });
 }
 
-function _statFileForDatabase(fileKey, opts) {
+function _statDatabase(opts) {
   _openDatabase(function(err, db) {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
     }
 
-    db.getSpaceAvailableForKey(fileKey, function(err, freeSpace, sIndex) {
+    db.stat(function(err, stats) {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       }
 
-      if (opts.human) {
-        freeSpace = kfs.utils.toHumanReadableSize(freeSpace);
-      }
+      var spacing = 1;
 
-      process.stdout.write(
-        kfs.utils.createSbucketNameFromIndex(sIndex) +
-        '\t' +
-        freeSpace
-      );
+      stats = stats.map(function(sBucketStats) {
+        var perc = sBucketStats.sBucketStats.size /
+                   sBucketStats.sBucketStats.free;
+
+        sBucketStats.sBucketStats.perc = (perc * 100).toFixed(2);
+
+        if (opts.human) {
+          sBucketStats.sBucketStats.size = kfs.utils.toHumanReadableSize(
+            sBucketStats.sBucketStats.size
+          );
+        }
+
+        var sizeOutLength = sBucketStats.sBucketStats.size.toString().length;
+        spacing = spacing < sizeOutLength ? sizeOutLength + 1 : spacing
+
+        return sBucketStats;
+      });
+
+      stats.forEach(function(sBucketStats) {
+        process.stdout.write(
+          kfs.utils.createSbucketNameFromIndex(sBucketStats.sBucketIndex) +
+          '\t' +
+          sBucketStats.sBucketStats.size +
+          Array(
+            spacing + 1 - sBucketStats.sBucketStats.size.toString().length
+          ).join(' ') +
+          '(' + sBucketStats.sBucketStats.perc + '%)' +
+          '\n'
+        );
+      });
+
       process.exit(0);
     });
   });
+}
+
+function _compactDatabase() {
+  var sBucketList = fs.readdirSync(
+    kfs.utils.coerceTablePath(program.db)
+  ).filter(function(fileName) {
+    return fileName !== kfs.RID_FILENAME;
+  });
+
+  async.eachSeries(sBucketList, function(sBucketName, next) {
+    require('leveldown').repair(
+      path.join(kfs.utils.coerceTablePath(program.db), sBucketName),
+      function(err) {
+        if (err) {
+          process.stderr.write('[error] ' + err.message);
+          process.exit(1)
+        }
+
+        process.stdout.write(sBucketName + ' (done!)\n');
+        next();
+      }
+    );
+  });
+}
+
+function _listItemsInDatabase(bucketIndex, env) {
+  _openDatabase(function(err, db) {
+    if (err) {
+      process.stderr.write('[error] ' + err.message);
+      process.exit(1);
+    }
+
+    db._getSbucketForKey(parseInt(bucketIndex), function(err, sBucket) {
+      if (err) {
+        process.stderr.write('[error] ' + err.message);
+        process.exit(1);
+      }
+
+      sBucket.listFileKeys(function(err, keys) {
+        if (err) {
+          process.stderr.write('[error] ' + err.message);
+          process.exit(1);
+        }
+
+        keys.forEach(function(result) {
+          process.stdout.write(
+            result.baseKey + '\t' +
+            (env.human ?
+              '~' + kfs.utils.toHumanReadableSize(result.approximateSize) :
+              '~' + result.approximateSize) +
+            '\n'
+          );
+        });
+      });
+    });
+  });
+}
+
+function _showHelp() {
+  program.help();
 }
 
 program
@@ -181,15 +266,26 @@ program
   .action(_unlinkFileFromDatabase);
 
 program
-  .command('stat <file_key>')
+  .command('list <bucket_index>')
   .option('-h, --human', 'print human readable format')
-  .description('get the available space for a file key')
-  .action(_statFileForDatabase);
+  .description('list all of the file keys in the given bucket')
+  .action(_listItemsInDatabase);
+
+program
+  .command('stat')
+  .option('-h, --human', 'print human readable format')
+  .description('get the free and used space for the database ')
+  .action(_statDatabase);
+
+program
+  .command('compact')
+  .description('trigger a compaction of all database buckets')
+  .action(_compactDatabase);
 
 program
   .command('*')
   .description('print usage information to the console')
-  .action(program.help);
+  .action(_showHelp);
 
 program.parse(process.argv);
 

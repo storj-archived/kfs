@@ -31,7 +31,7 @@ describe('@module:kfs/utils', function() {
       var fileKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
       var itemKey = utils.createItemKeyFromIndex(fileKey, 20);
       expect(itemKey).to.equal(
-        'a71fed10c7074575d6bf89e2d1f874b355f83c0f 000020'
+        'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc 000020'
       );
     });
 

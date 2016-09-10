@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/bookchin/kfs#readme",
   "dependencies": {
+    "async": "^2.0.1",
     "commander": "^2.9.0",
     "leveldown": "^1.4.6",
     "merge": "^1.2.0",
@@ -43,7 +44,6 @@
     "readable-stream": "^2.1.5"
   },
   "devDependencies": {
-    "async": "^2.0.1",
     "chai": "^3.5.0",
     "coveralls": "^2.11.12",
     "gh-pages": "^0.11.0",
