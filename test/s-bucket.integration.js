@@ -58,7 +58,7 @@ describe('Sbucket/Integration', function() {
         _iterator.restore();
         expect(err.message).to.equal('Failed');
         done();
-      })
+      });
     });
 
   });

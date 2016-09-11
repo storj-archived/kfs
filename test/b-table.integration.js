@@ -7,14 +7,13 @@ var Btable = require('../lib/b-table');
 var expect = require('chai').expect;
 var rimraf = require('rimraf');
 var mkdirp = require('mkdirp');
-var constants = require('../lib/constants');
 var crypto = require('crypto');
 var sinon = require('sinon');
 
 describe('Btable/Integration', function() {
 
   var TMP_DIR = path.join(os.tmpdir(), 'KFS_SANDBOX');
-  var TABLE_PATH = path.join(TMP_DIR, 'testdb');
+  var TABLE_PATH = path.join(TMP_DIR, 'testdb-btable-integration');
   var db = null;
 
   before(function(done) {
@@ -101,7 +100,7 @@ describe('Btable/Integration', function() {
         {
           list: function(cb) {
             _getSbucketForKey.restore();
-            done();
+            cb();
           }
         }
       );
