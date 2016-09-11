@@ -269,6 +269,40 @@
 
         <tr>
             
+                <td class="name"><code>maxTableSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Max bytes to cap the database</td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>sBucketOpts</code></td>
             
 
@@ -881,7 +915,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="getSpaceAvailableForKey"><span class="type-signature"></span>getSpaceAvailableForKey(key, callback)</h4>
+    <h4 class="name" id="list"><span class="type-signature"></span>list(keyOrIndex, callback)</h4>
     
     
 </dt>
@@ -889,7 +923,7 @@
 
     
     <div class="description">
-        Determine the space in bytes available to store a value at the key
+        Lists the file keys in the given bucket
     </div>
     
 
@@ -924,12 +958,15 @@
 
         <tr>
             
-                <td class="name"><code>key</code></td>
+                <td class="name"><code>keyOrIndex</code></td>
             
 
             <td class="type">
             
                 
+<span class="param-type">Number</span>
+|
+
 <span class="param-type">String</span>
 
 
@@ -941,7 +978,7 @@
 
             
 
-            <td class="description last">The key for the data to store</td>
+            <td class="description last">The bucket index of a file key</td>
         </tr>
 
     
@@ -954,7 +991,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="Btable.html#~getSpaceAvailableForKeyCallback">Btable~getSpaceAvailableForKeyCallback</a></span>
+<span class="param-type"><a href="Sbucket.html#~listCallback">Sbucket~listCallback</a></span>
 
 
 
@@ -1122,6 +1159,190 @@
             
             </td>
 
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="lib_b-table.js.html">lib/b-table.js</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="stat"><span class="type-signature"></span>stat( [keyOrIndex], callback)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Lists the created <a href="Sbucket.html">Sbucket</a>s and their sizes
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>keyOrIndex</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Optional bucket index or file key</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Btable.html#~statCallback">Btable~statCallback</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1909,7 +2130,7 @@
                 
 <hr>
 <dt>
-    <h4 class="name" id="~getSpaceAvailableForKeyCallback"><span class="type-signature"></span>getSpaceAvailableForKeyCallback( [error], spaceAvailable, sBucketIndex)</h4>
+    <h4 class="name" id="~statCallback"><span class="type-signature"></span>statCallback( [error], sBuckets)</h4>
     
     
 </dt>
@@ -1984,13 +2205,13 @@
 
         <tr>
             
-                <td class="name"><code>spaceAvailable</code></td>
+                <td class="name"><code>sBuckets</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">Array.&lt;Object></span>
 
 
 
@@ -2009,20 +2230,20 @@
 
             
 
-            <td class="description last">The free space left in bytes</td>
+            <td class="description last"></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>sBucketIndex</code></td>
+                <td class="name"><code>sBuckets[].sBucketIndex</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">String</span>
 
 
 
@@ -2041,7 +2262,113 @@
 
             
 
-            <td class="description last">The index of the <a href="Sbucket.html">Sbucket</a></td>
+            <td class="description last">The index of the S-bucket</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sBuckets[].sBucketStats</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">
+                <h6 class="method-params-label method-subparams-label">Properties</h6>
+                
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>used</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Space used in the bucket</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>free</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Space free in the bucket</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     

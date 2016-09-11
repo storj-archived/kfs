@@ -99,6 +99,7 @@ var constants = require('./constants');
 var utils = require('./utils');
 var WritableFileStream = require('./write-stream');
 var ReadableFileStream = require('./read-stream');
+var async = require('async');
 
 /**
  * Capped LevelDB database within a {@link Btable}
@@ -125,6 +126,7 @@ function Sbucket(dbPath, options) {
   this._options = merge(Object.create(Sbucket.DEFAULTS), options);
   this._db = leveldown(dbPath);
   this._pendingOperations = 0;
+  this._maxSize = this._options.maxSize;
   this.readyState = Sbucket.CLOSED;
 }
 
@@ -159,7 +161,8 @@ Sbucket.DEFAULTS = {
   errorIfExists: false,
   writeBufferSize: 4 * (1024 * 1024),
   blockSize: 4096,
-  blockRestartInterval: 16
+  blockRestartInterval: 16,
+  maxSize: constants.S
 };
 
 /**
@@ -454,7 +457,7 @@ Sbucket.prototype.stat = function(callback) {
 
       callback(null, {
         size: size,
-        free: constants.S - size
+        free: self._maxSize - size
       });
     }
   );
@@ -465,6 +468,73 @@ Sbucket.prototype.stat = function(callback) {
  * @param {Object} bucketStats
  * @param {Number} bucketStats.size - The used space in bytes
  * @param {Number} bucketStats.free - The free space left in bytes
+ */
+
+/**
+ * Get a list of file keys in the bucket and their approximate size
+ * @param {Sbucket~listCallback}
+ */
+Sbucket.prototype.list = function(callback) {
+  var self = this;
+  var iterator = this._db.iterator({
+    gte: Sbucket.SIZE_START_KEY,
+    lte: Sbucket.SIZE_END_KEY,
+    values: false,
+    keyAsBuffer: false
+  });
+  var keys = {};
+  var currentResult = null;
+
+  function _test() {
+    return currentResult === null;
+  }
+
+  function _accumulateKey(next) {
+    iterator.next(function(err, key) {
+      if (err) {
+        return next(err);
+      }
+
+      if (!key) {
+        currentResult = null;
+        return next();
+      }
+
+      currentResult = key.split(' ')[0];
+      keys[currentResult] = keys[currentResult] ?
+                            keys[currentResult] + constants.C :
+                            constants.C;
+
+      next();
+    });
+  }
+
+  this._incPendingOps();
+  async.doUntil(_accumulateKey, _test, function(err) {
+    self._decPendingOps();
+
+    if (err) {
+      return callback(err);
+    }
+
+    var results = [];
+
+    for (var key in keys) {
+      results.push({
+        baseKey: key,
+        approximateSize: keys[key]
+      });
+    }
+
+    callback(null, results);
+  });
+};
+/**
+ * @callback Sbucket~listCallback
+ * @param {Error} [error]
+ * @param {Object[]} results
+ * @param {String} results.baseKey
+ * @param {Number} results.approximateSize
  */
 
 /**

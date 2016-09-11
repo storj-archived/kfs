@@ -107,12 +107,52 @@ var path = require('path');
 module.exports.noop = function() {};
 
 /**
+ * Tests if the string is a valid key
+ * @param {String} key - The file key
+ * @returns {Boolean}
+ */
+module.exports.isValidKey = function(key) {
+  var keyBuffer;
+
+  try {
+    keyBuffer = Buffer(key, 'hex');
+  } catch (err) {
+    return false;
+  }
+
+  return keyBuffer.length === (constants.R / 8);
+};
+
+/**
  * Hashes the given key
  * @param {String} key - The file key
  * @returns {String}
  */
 module.exports.hashKey = function(key) {
+  if (module.exports.isValidKey(key)) {
+    return key;
+  }
+
   return crypto.createHash(constants.HASH).update(key).digest('hex');
+};
+
+/**
+ * Coerces input into a valid file key or bucket index
+ * @param {String} keyOrIndex - The bucket index or a file key
+ * @returns {String|Number}
+ */
+module.exports.coerceKeyOrIndex = function(keyOrIndex) {
+  var key = keyOrIndex;
+
+  if (!module.exports.isValidKey(keyOrIndex)) {
+    key = parseInt(keyOrIndex);
+
+    if (Number.isNaN(key)) {
+      key = module.exports.hashKey(keyOrIndex);
+    }
+  }
+
+  return key;
 };
 
 /**

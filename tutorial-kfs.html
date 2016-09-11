@@ -105,7 +105,7 @@ var myDataStore = kfs('/path/to/database.kfs');</code></pre><p>That's it, Your d
 myDataStore.exists(some160bitKey, function(err, exists) {
   console.log('The file ' + (exists ? 'DOES' : 'DOES NOT') + ' exist!');
 });</code></pre><h3>Check if a File Can Be Stored</h3><p>To check the available space for a file at a given key, use the 
-<a href="Btable.html#getSpaceAvailableForKey">Btable#getSpaceAvailableForKey</a> method:</p>
+Btable#getSpaceAvailableForKey method:</p>
 <pre class="prettyprint source"><code>var fileSizeInBytes = 4096;
 
 myDataStore.getSpaceAvailableForKey(some160bitKey, function(err, freeSpace) {
