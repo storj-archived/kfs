@@ -27,46 +27,6 @@ describe('Btable/Integration', function() {
     });
   });
 
-  describe('#getSpaceAvailableForKey', function() {
-
-    it('should callback with correct free space for key', function(done) {
-      var key = utils.createReferenceId().toString('hex');
-      db.getSpaceAvailableForKey(key, function(e, free) {
-        expect(e).to.equal(null);
-        expect(free).to.equal(constants.S);
-        done();
-      });
-    });
-
-    it('should callback with error if Sbucket#stat fails', function(done) {
-      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
-        1,
-        null,
-        { stat: sinon.stub().callsArgWith(0, new Error('Failed')) }
-      );
-      var key = utils.createReferenceId().toString('hex');
-      db.getSpaceAvailableForKey(key, function(e) {
-        _getSbucketForKey.restore();
-        expect(e.message).to.equal('Failed');
-        done();
-      });
-
-    });
-
-    it('should callback with error if cannot get bucket', function(done) {
-      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
-        1,
-        new Error('Failed')
-      );
-      db.getSpaceAvailableForKey('0000', function(err) {
-        _getSbucketForKey.restore();
-        expect(err.message).to.equal('Failed');
-        done();
-      });
-    });
-
-  });
-
   describe('#writeFile', function() {
 
     it('should write the file to the database', function(done) {
@@ -120,11 +80,48 @@ describe('Btable/Integration', function() {
 
   });
 
+  describe('#list', function() {
+
+    it('should bubble errors from #_getSbucketForKey', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.list('somekey', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+    it('should call SBucket#list', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        null,
+        {
+          list: function(cb) {
+            _getSbucketForKey.restore();
+            done();
+          }
+        }
+      );
+      db.list('somekey', done);
+    });
+
+  });
+
   describe('#stat', function() {
 
-    it('should return the stats fo all buckets', function(done) {
+    it('should return the stats for all buckets', function(done) {
       db.stat(function(err, results) {
-        expect(results).to.have.lengthOf(3);
+        expect(results).to.have.lengthOf(2);
+        done();
+      });
+    });
+
+    it('should return the stats for the given bucket only', function(done) {
+      db.stat('001.s', function(err, stats) {
+        expect(stats).to.have.lengthOf(1);
         done();
       });
     });

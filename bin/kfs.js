@@ -131,20 +131,26 @@ function _unlinkFileFromDatabase(fileKey) {
   });
 }
 
-function _statDatabase(opts) {
+function _statDatabase(keyOrIndex, opts) {
   _openDatabase(function(err, db) {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
     }
 
-    db.stat(function(err, stats) {
+    if (!keyOrIndex) {
+      db.stat(_statCallback);
+    } else {
+      db.stat(keyOrIndex, _statCallback);
+    }
+
+    function _statCallback(err, stats) {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       }
 
-      var spacing = 1;
+      var spacing = 2;
 
       stats = stats.map(function(sBucketStats) {
         var perc = sBucketStats.sBucketStats.size /
@@ -178,7 +184,7 @@ function _statDatabase(opts) {
       });
 
       process.exit(0);
-    });
+    }
   });
 }
 
@@ -212,27 +218,20 @@ function _listItemsInDatabase(bucketIndex, env) {
       process.exit(1);
     }
 
-    db._getSbucketForKey(parseInt(bucketIndex), function(err, sBucket) {
+    db.list(bucketIndex, function(err, keys) {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       }
 
-      sBucket.listFileKeys(function(err, keys) {
-        if (err) {
-          process.stderr.write('[error] ' + err.message);
-          process.exit(1);
-        }
-
-        keys.forEach(function(result) {
-          process.stdout.write(
-            result.baseKey + '\t' +
-            (env.human ?
-              '~' + kfs.utils.toHumanReadableSize(result.approximateSize) :
-              '~' + result.approximateSize) +
-            '\n'
-          );
-        });
+      keys.forEach(function(result) {
+        process.stdout.write(
+          result.baseKey + '\t' +
+          (env.human ?
+            '~' + kfs.utils.toHumanReadableSize(result.approximateSize) :
+            '~' + result.approximateSize) +
+          '\n'
+        );
       });
     });
   });
@@ -266,13 +265,13 @@ program
   .action(_unlinkFileFromDatabase);
 
 program
-  .command('list <bucket_index>')
+  .command('list <bucket_index_or_file_index>')
   .option('-h, --human', 'print human readable format')
   .description('list all of the file keys in the given bucket')
   .action(_listItemsInDatabase);
 
 program
-  .command('stat')
+  .command('stat [bucket_index_or_file_key]')
   .option('-h, --human', 'print human readable format')
   .description('get the free and used space for the database ')
   .action(_statDatabase);

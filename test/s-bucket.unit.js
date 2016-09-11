@@ -199,7 +199,7 @@ describe('Sbucket', function() {
 
   });
 
-  describe('#listFileKeys', function() {
+  describe('#list', function() {
 
     it.skip('should list the file keys in the bucket', function(done) {
       done(); // TODO
