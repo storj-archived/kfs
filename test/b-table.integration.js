@@ -7,14 +7,13 @@ var Btable = require('../lib/b-table');
 var expect = require('chai').expect;
 var rimraf = require('rimraf');
 var mkdirp = require('mkdirp');
-var constants = require('../lib/constants');
 var crypto = require('crypto');
 var sinon = require('sinon');
 
 describe('Btable/Integration', function() {
 
   var TMP_DIR = path.join(os.tmpdir(), 'KFS_SANDBOX');
-  var TABLE_PATH = path.join(TMP_DIR, 'testdb');
+  var TABLE_PATH = path.join(TMP_DIR, 'testdb-btable-integration');
   var db = null;
 
   before(function(done) {
@@ -25,46 +24,6 @@ describe('Btable/Integration', function() {
       db = new Btable(TABLE_PATH);
       done();
     });
-  });
-
-  describe('#getSpaceAvailableForKey', function() {
-
-    it('should callback with correct free space for key', function(done) {
-      var key = utils.createReferenceId().toString('hex');
-      db.getSpaceAvailableForKey(key, function(e, free) {
-        expect(e).to.equal(null);
-        expect(free).to.equal(constants.S);
-        done();
-      });
-    });
-
-    it('should callback with error if Sbucket#stat fails', function(done) {
-      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
-        1,
-        null,
-        { stat: sinon.stub().callsArgWith(0, new Error('Failed')) }
-      );
-      var key = utils.createReferenceId().toString('hex');
-      db.getSpaceAvailableForKey(key, function(e) {
-        _getSbucketForKey.restore();
-        expect(e.message).to.equal('Failed');
-        done();
-      });
-
-    });
-
-    it('should callback with error if cannot get bucket', function(done) {
-      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
-        1,
-        new Error('Failed')
-      );
-      db.getSpaceAvailableForKey('0000', function(err) {
-        _getSbucketForKey.restore();
-        expect(err.message).to.equal('Failed');
-        done();
-      });
-    });
-
   });
 
   describe('#writeFile', function() {
@@ -116,6 +75,80 @@ describe('Btable/Integration', function() {
         expect(err.message).to.equal('Failed');
         done();
       });
+    });
+
+  });
+
+  describe('#list', function() {
+
+    it('should bubble errors from #_getSbucketForKey', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.list('somekey', function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+    it('should call SBucket#list', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        null,
+        {
+          list: function(cb) {
+            _getSbucketForKey.restore();
+            cb();
+          }
+        }
+      );
+      db.list('somekey', done);
+    });
+
+  });
+
+  describe('#stat', function() {
+
+    it('should return the stats for all buckets', function(done) {
+      db.stat(function(err, results) {
+        expect(results).to.have.lengthOf(2);
+        done();
+      });
+    });
+
+    it('should return the stats for the given bucket only', function(done) {
+      db.stat('001.s', function(err, stats) {
+        expect(stats).to.have.lengthOf(1);
+        done();
+      });
+    });
+
+    it('should bubble errors from _getSbucketForKey', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        new Error('Failed')
+      );
+      db.stat(function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+    it('should bubble errors from Sbucket#stat', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+        1,
+        null,
+        { stat: sinon.stub().callsArgWith(0, new Error('Failed')) }
+      );
+      db.stat(function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+
     });
 
   });

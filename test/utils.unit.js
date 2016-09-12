@@ -13,6 +13,14 @@ describe('@module:kfs/utils', function() {
 
   });
 
+  describe('#isValidKey', function() {
+
+    it('should return false for invalid key', function() {
+      expect(utils.isValidKey({})).to.equal(false);
+    });
+
+  });
+
   describe('#toHumanReadableSize', function() {
 
     it('should covert the bytes to a human readable size', function() {
@@ -25,13 +33,28 @@ describe('@module:kfs/utils', function() {
 
   });
 
+  describe('#coerceKeyOrIndex', function() {
+
+    it('should return the valid key', function() {
+      var key = utils.createReferenceId();
+      expect(utils.coerceKeyOrIndex(key)).to.equal(key);
+    });
+
+    it('should return the hash of the invalid key', function() {
+      expect(utils.coerceKeyOrIndex('test')).to.equal(
+        'a94a8fe5ccb19ba61c4c0873d391e987982fbbd3'
+      );
+    });
+
+  });
+
   describe('#createItemKeyFromIndex', function() {
 
     it('should return the correct item key', function() {
       var fileKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
       var itemKey = utils.createItemKeyFromIndex(fileKey, 20);
       expect(itemKey).to.equal(
-        'a71fed10c7074575d6bf89e2d1f874b355f83c0f 000020'
+        'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc 000020'
       );
     });
 
