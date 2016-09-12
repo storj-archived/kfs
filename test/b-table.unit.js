@@ -49,21 +49,28 @@ describe('Btable', function() {
 
     var _initBtableDirectory;
     var _validateTablePath;
+    var StubbedBtable = proxyquire('../lib/b-table', {
+      fs: {
+        readFileSync: sinon.stub().returns(
+          utils.createReferenceId().toString('hex')
+        )
+      }
+    });
 
     before(function() {
       _initBtableDirectory = sinon.stub(
-        Btable.prototype,
+        StubbedBtable.prototype,
         '_initBtableDirectory'
       );
       _validateTablePath = sinon.stub(
-        Btable.prototype,
+        StubbedBtable.prototype,
         '_validateTablePath'
       );
     });
 
     it('should initialize the db if it does not exist', function() {
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(false);
-      Btable('');
+      StubbedBtable('');
       _fileDoesExist.restore();
       setImmediate(function() {
         expect(_initBtableDirectory.called).to.equal(true);
@@ -72,26 +79,24 @@ describe('Btable', function() {
 
     it('should validate the db if it does exist', function() {
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
-      Btable('');
+      StubbedBtable('');
       _fileDoesExist.restore();
       setImmediate(function() {
         expect(_validateTablePath.called).to.equal(true);
       });
     });
 
-    it('should emit an error if validating table path fails', function(done) {
+    it('should throw an error if validating table path fails', function() {
       _validateTablePath.restore();
       _validateTablePath = sinon.stub(
-        Btable.prototype,
+        StubbedBtable.prototype,
         '_validateTablePath'
-      ).callsArgWith(0, new Error('Failed'));
+      ).throws(new Error('Failed'));
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
-      var bTable = new Btable('');
-      bTable.on('error', function(err) {
-        _fileDoesExist.restore();
-        expect(err.message).to.equal('Failed');
-        done();
-      });
+      expect(function() {
+        StubbedBtable('');
+      }).to.throw(Error, 'Failed');
+      _fileDoesExist.restore();
     });
 
     after(function() {
@@ -103,35 +108,42 @@ describe('Btable', function() {
 
   describe('#_initBtableDirectory', function() {
 
-    it('should callback error if mkdirp fails', function(done) {
+    it('should throw error if mkdirp fails', function() {
       var StubbedBtable = proxyquire('../lib/b-table', {
-        mkdirp: sinon.stub().callsArgWith(1, new Error('Failed'))
+        mkdirp: {
+          sync: sinon.stub().throws(new Error('Failed'))
+        }
       });
-      StubbedBtable.prototype._initBtableDirectory.call({
-        _tablePath: 'some/path.kfs'
-      }, function(err) {
-        expect(err.message).to.equal('Failed');
-        done();
-      });
+      expect(function() {
+        StubbedBtable.prototype._initBtableDirectory.call({
+          _tablePath: 'some/path.kfs'
+        });
+      }).to.throw(Error, 'Failed');
     });
 
-    it('should write the reference id file and callback', function(done) {
+    it('should write the reference id file and callback', function() {
+      var _mkdirp = sinon.stub();
+      var _writeFileSync = sinon.stub();
       var StubbedBtable = proxyquire('../lib/b-table', {
-        mkdirp: sinon.stub().callsArg(1),
+        mkdirp: {
+          sync: _mkdirp
+        },
         fs: {
-          writeFile: sinon.stub().callsArg(3)
+          writeFileSync: _writeFileSync
         }
       });
       StubbedBtable.prototype._initBtableDirectory.call({
         _tablePath: 'some/path.kfs'
-      }, done);
+      });
+      expect(_mkdirp.called).to.equal(true);
+      expect(_writeFileSync.called).to.equal(true);
     });
 
   });
 
   describe('#_validateTablePath', function() {
 
-    it('should callback error if not a directory', function(done) {
+    it('should throw error if not a directory', function() {
       var StubbedBtable = proxyquire('../lib/b-table', {
         fs: {
           statSync: sinon.stub().returns({
@@ -139,15 +151,14 @@ describe('Btable', function() {
           })
         }
       });
-      StubbedBtable.prototype._validateTablePath.call({
-        _tablePath: 'some/path.kfs'
-      }, function(err) {
-        expect(err.message).to.equal('Table path is not a directory');
-        done();
-      });
+      expect(function() {
+        StubbedBtable.prototype._validateTablePath.call({
+          _tablePath: 'some/path.kfs'
+        });
+      }).to.throw(Error, 'Table path is not a directory');
     });
 
-    it('should callback error if not valid table', function(done) {
+    it('should throw error if not valid table', function() {
       var StubbedBtable = proxyquire('../lib/b-table', {
         fs: {
           statSync: sinon.stub().returns({
@@ -156,15 +167,14 @@ describe('Btable', function() {
           readdirSync: sinon.stub().returns([])
         }
       });
-      StubbedBtable.prototype._validateTablePath.call({
-        _tablePath: 'some/path.kfs'
-      }, function(err) {
-        expect(err.message).to.equal('Table path is not a valid KFS instance');
-        done();
-      });
+      expect(function() {
+        StubbedBtable.prototype._validateTablePath.call({
+          _tablePath: 'some/path.kfs'
+        });
+      }).to.throw(Error, 'Table path is not a valid KFS instance');
     });
 
-    it('should callback if valid table', function(done) {
+    it('should not throw if valid table', function() {
       var StubbedBtable = proxyquire('../lib/b-table', {
         fs: {
           statSync: sinon.stub().returns({
@@ -173,12 +183,11 @@ describe('Btable', function() {
           readdirSync: sinon.stub().returns([Btable.RID_FILENAME])
         }
       });
-      StubbedBtable.prototype._validateTablePath.call({
-        _tablePath: 'some/path.kfs'
-      }, function(err) {
-        expect(err).to.equal(null);
-        done();
-      });
+      expect(function() {
+        StubbedBtable.prototype._validateTablePath.call({
+          _tablePath: 'some/path.kfs'
+        });
+      }).to.not.throw(Error);
     });
 
   });

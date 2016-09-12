@@ -94,7 +94,9 @@ describe('@module:kfs/utils', function() {
     });
 
     it('should return false if file does not exist', function() {
-      expect(utils.fileDoesExist(utils.createReferenceId())).to.equal(false);
+      expect(utils.fileDoesExist(
+        utils.createReferenceId().toString('hex')
+      )).to.equal(false);
     });
 
   });
