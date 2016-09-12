@@ -13,17 +13,15 @@ var HOME = platform !== 'win32' ? process.env.HOME : process.env.USERPROFILE;
 var DEFAULT_DB = path.join(HOME, '.kfs', 'default');
 
 function _openDatabase(callback) {
-  var db = kfs(program.db);
+  var db;
 
-  db.once('ready', function() {
-    db.removeListener('error', callback);
-    callback(null, db);
-  });
+  try {
+    db = kfs(program.db);
+  } catch (err) {
+    return callback(err);
+  }
 
-  db.once('error', function(err) {
-    db.removeListener('ready', callback);
-    callback(err);
-  });
+  callback(null, db);
 }
 
 function _writeFileToDatabase(fileKey, filePath) {
