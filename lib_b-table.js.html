@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html#event:error">Btable#event:error</a></li><li><a href="Btable.html#event:ready">Btable#event:ready</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+					<li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -126,21 +126,10 @@ function Btable(tablePath, options) {
   this._maxTableSize = this._options.maxTableSize;
   this._options.sBucketOpts.maxSize = this._maxTableSize / constants.B;
 
-  setImmediate(this._open.bind(this));
+  this._open();
 }
 
 inherits(Btable, events.EventEmitter);
-
-/**
- * Triggered when the B-table is ready
- * @event Btable#ready
- */
-
-/**
- * Triggered if there is an error
- * @event Btable#error
- * @param {Error} error
- */
 
 Btable.RID_FILENAME = 'r.id';
 Btable.DEFAULTS = {
@@ -154,72 +143,49 @@ Btable.DEFAULTS = {
  * @private
  */
 Btable.prototype._open = function() {
-  var self = this;
-
-  function _callback(err) {
-    if (err) {
-      return self.emit('error', err);
-    }
-
-    self._rid = Buffer(fs.readFileSync(
-      path.join(self._tablePath, Btable.RID_FILENAME),
-      { encoding: 'hex' }
-    ), 'hex');
-
-    self.emit('ready');
-  }
-
   if (!utils.fileDoesExist(this._tablePath)) {
-    return this._initBtableDirectory(_callback);
+    this._initBtableDirectory();
+  } else {
+    this._validateTablePath();
   }
 
-  this._validateTablePath(_callback);
+  this._rid = Buffer(fs.readFileSync(
+    path.join(this._tablePath, Btable.RID_FILENAME),
+    { encoding: 'hex' }
+  ), 'hex');
 };
 
 /**
  * Initializes a new KFS database (B-table directory)
  * @private
  */
-Btable.prototype._initBtableDirectory = function(callback) {
-  var self = this;
-
-  mkdirp(this._tablePath, function(err) {
-    if (err) {
-      return callback(err);
-    }
-
-    fs.writeFile(
-      path.join(self._tablePath, Btable.RID_FILENAME),
-      self._rid,
-      { encoding: 'hex' },
-      callback
-    );
-  });
+Btable.prototype._initBtableDirectory = function() {
+  mkdirp.sync(this._tablePath);
+  fs.writeFileSync(
+    path.join(this._tablePath, Btable.RID_FILENAME),
+    this._rid,
+    { encoding: 'hex' }
+  );
 };
 
 /**
  * Validates a path to a directory as a KFS instance
  * @private
  */
-Btable.prototype._validateTablePath = function(callback) {
+Btable.prototype._validateTablePath = function() {
   var dirStats = fs.statSync(this._tablePath);
 
-  if (!dirStats.isDirectory()) {
-    return callback(new Error('Table path is not a directory'));
-  }
+  assert(dirStats.isDirectory(), 'Table path is not a directory');
 
   var requiredPaths = [Btable.RID_FILENAME];
   var dirContents = fs.readdirSync(this._tablePath);
 
   for (var i = 0; i &lt; requiredPaths.length; i++) {
-    var pathName = requiredPaths[i];
-
-    if (dirContents.indexOf(pathName) === -1) {
-      return callback(new Error('Table path is not a valid KFS instance'));
-    }
+    assert(
+      dirContents.indexOf(requiredPaths[i]) !== -1,
+      'Table path is not a valid KFS instance'
+    );
   }
-
-  callback(null);
 };
 
 /**
