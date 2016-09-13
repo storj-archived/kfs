@@ -4,5 +4,8 @@
   },
   "cli": {
     "title": "Command Line Interface"
+  },
+  "performance-testing": {
+    "Performance Testing the Changes"
   }
 }
