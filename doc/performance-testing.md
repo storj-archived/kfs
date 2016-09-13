@@ -1,22 +1,26 @@
+## Performance Testing 
+
 Our goal for this project is enhancing performance over the standard
 LevelDB protocol. A robust set of performance tests were run on a 
 standard LevelDB along with our new version leveraging KFS. 
 This is a summary of the findings. 
 
 ### Experiment Design 
-To ensure robust metrics we ran a series of trials (one hundred) in 
-sequential order. Each trial consisted of a single read, write and unlink
-operation for file sizes of 8, 16, 32, 64, 128, 256 and 512 MB each. 
-The experiment was conducted on both a solid state drive (SSD) and 
-hard disk drive (HDD). 
+A series of one hundred trials were run in sequential order. 
+Each trial consisted of measuring the execution time for a single read, 
+write and unlink operation on file sizes of 8, 16, 32, 64,128, 256 and 
+512 MB. This experiment was conducted for both a vanilla (standard) LevelDb 
+and a version using the KFS protocol. All trials used a solid state drive (SSD). 
 ### Results 
-
-The below graphs display the measured execution times over one hundred 
-trial runs. 
-#### Operation and Drive Type 
-![Graph One](/doc/img/executionTimeByOperationAndDriveType.png)
-#### File Size, Operation and Drive Type
-![Graph Two](/doc/img/executionTimeByOperationFileSizeAndDriveType.png)
+ 
+#### *General Overview*
+![Summary Chart](/doc/img/performanceTestOverviewKfsVsVanilla.png)
+#### *Mean Execution Time Comparison*
+![Mean Comparison](/doc/img/meanElapsedTimeByOperationAndDb.png)
+#### *Standard Deviation Execution Time Comparison*
+![Standard Deviation Comparison](/doc/img/sdElapsedTimeByOperationAndDb.png)
+#### *Two Sided Significance Test*
+![Two Sided Test](/doc/img/KFS_vs_Vanilla_TwoSidedTest.png)
 
 ### Conclusion 
  
