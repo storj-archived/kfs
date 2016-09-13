@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>KFS Tutorial: Programmatic Usage</title>
+	<title>KFS Tutorial: Performance Testing the Changes</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -87,85 +87,51 @@
 <header>
     
 
-    <h2>Programmatic Usage</h2>
+    <h2>Performance Testing the Changes</h2>
 </header>
 
 <article>
-    <p>This tutorial covers everything you need to know about using KFS within your 
-application. KFS is based on LevelDB, an embedded key-value store, but the 
-interface for interacting with a KFS is focused on the storage and retrieval 
-of files and arbitrary binary streams.</p>
-<h3>Getting Started</h3><p>To create and open a new KFS database (or open an existing one), simply 
-require the module and create a <a href="Btable.html">Btable</a> object:</p>
-<pre class="prettyprint source"><code>var kfs = require('kfs');
-var myDataStore = kfs('/path/to/database.kfs');</code></pre><p>That's it, Your data store is ready to use!</p>
-<h3>Check if a File Exists</h3><p>To check if a file exists at a given key, use the <a href="Btable.html#exists">Btable#exists</a> method:</p>
-<pre class="prettyprint source"><code>var some160bitKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
-
-myDataStore.exists(some160bitKey, function(err, exists) {
-  console.log('The file ' + (exists ? 'DOES' : 'DOES NOT') + ' exist!');
-});</code></pre><h3>Check if a File Can Be Stored</h3><p>To check the available space for a file at a given key, use the 
-Btable#getSpaceAvailableForKey method:</p>
-<pre class="prettyprint source"><code>var fileSizeInBytes = 4096;
-
-myDataStore.getSpaceAvailableForKey(some160bitKey, function(err, freeSpace) {
-  if (err) {
-    // handle error
-  }
-
-  var enoughFreeSpace = freeSpace > fileSizeInBytes;
-
-  console.log('There ' + (enoughFreeSpace ? 'IS': 'IS NOT') + ' enough space!');
-});</code></pre><h3>Write a File to the Data Store</h3><p>To write a raw buffer to the data store, use the <a href="Btable.html#writeFile">Btable#writeFile</a> 
-method:</p>
-<pre class="prettyprint source"><code>var myFileBuffer = new Buffer([/* ... */]);
-
-myDataStore.writeFile(some160bitKey, myFileBuffer, function(err) {
-  console.log('File ' + (err ? 'WAS NOT' : 'WAS') + ' written!');
-});</code></pre><h3>Read a File from the Data Store</h3><p>To read a file into memory from the data store, use the <a href="Btable.html#readFile">Btable#readFile</a> 
-method:</p>
-<pre class="prettyprint source"><code>myDataStore.readFile(some160bitKey, function(err, fileBuffer) {
-  console.log(err || fileBuffer);
-});</code></pre><h3>Remove a File from the Data Store</h3><p>To remove a file from the data store, use the <a href="Btable.html#unlink">Btable#unlink</a> method:</p>
-<pre class="prettyprint source"><code>myDataStore.unlink(some160bitKey, function(err) {
-  console.log('The file ' + (err ? 'WAS NOT' : 'WAS') + ' removed!');
-});</code></pre><h3>Use the Streaming Interfaces</h3><p>When reading or writing larger files, you may not wish to buffer everything 
-into memory. In these cases, use the <a href="Btable.html#createReadStream">Btable#createReadStream</a> and 
-<a href="Btable.html#createWriteStream">Btable#createWriteStream</a> methods:</p>
-<pre class="prettyprint source"><code>myDataStore.createReadStream(some160bitKey, function(err, readableStream) {
-  if (err) {
-    // handle error
-  }
-
-  readableStream.on('data', function(chunk) {
-    console.log('Got chunk:', chunk);
-  });
-
-  readableStream.on('end', function() {
-    console.log('All chunks read!');
-  });
-
-  readableStream.on('error', function(err) {
-    console.log('Failed to read file:', err.message);
-  });
-});</code></pre><pre class="prettyprint source"><code>myDataStore.createWriteStream(some160bitKey, function(err, writableStream) {
-  if (err) {
-    // handle error
-  }
-
-  writableStream.on('finish', function() {
-    console.log('All chunks written!');
-  });
-
-  writableStream.on('error', function(err) {
-    console.log('Failed to write file:', err.message);
-  });
-
-  writableStream.write(new Buffer([/* ... */]));
-  writableStream.write(new Buffer([/* ... */]));
-  writableStream.write(new Buffer([/* ... */]));
-  writableStream.end();
-});</code></pre>
+    <p>One major hypothesis of this project is that KFS enhances performance over 
+the use a of a standard LevelDB instance. This is due to the nature of how 
+KFS bounds the cost of LevelDB's compaction mechanism by sharding a data set 
+over a series of size-capped LevelDB instances. A set of performance tests 
+were run on a standard LevelDB along with our version which leverages KFS. 
+This is a short summary of our findings and their implications. </p>
+<h3>Experiment Design</h3><p>A series of one hundred trials were run in sequential order. 
+Each trial consisted of measuring the execution time for a complete read, 
+write, and unlink (delete) operation on file sizes of 8, 16, 32, 64, 128, 256 
+and 512 MiB. Keeping in mind that files are split into discrete 64KiB key/value 
+pairs, keyed by a hash of the content of the entire file, this means that the 
+actual number of read/write/delete operations are equal to the size of the file
+divided by 64KiB.</p>
+<p>Of particular note is that each sequential test run adds approximately 1GiB to 
+the full size of the database (since unlinks only tombstone entries). Our 
+number of trials is consistent with our assertion that LevelDBs performance 
+degrades significantly after the size of the database exceeds 100GiB.</p>
+<p>This experiment was conducted for both a vanilla (standard) LevelDB and a 
+version using the KFS protocol. All trials used a solid state drive (SSD). </p>
+<h3>Results</h3><p>An overview plot displaying the execution time by file size and operation for 
+each trial indicates some difference between KFS and a vanilla LevelDB. At a 
+high level it appears vanilla LevelDB had a higher variance across many 
+categories. It is our belief that this variance is due to compaction triggering 
+in LevelDB as the size of the single instance grows quickly.</p>
+<p>Since data is spread in a uniform fashion across a series of LevelDBs in KFS, 
+this compaction triggering happens less frequently and has a much smaller 
+impact.</p>
+<p><img src="/doc/img/performance-test-overview-kfs-vs-vanilla.png" alt="Summary Chart"></p>
+<p>Upon closer inspection the data shows that in every category the mean execution
+time is lower for KFS for all categories. As for variance, vanilla LevelDB is
+vastly greater than KFS for writes and unlinks but more consistent for reads.</p>
+<p><img src="/doc/img/mean-elapsed-time-by-operation-and-db.png" alt="Mean Comparison"></p>
+<p><img src="/doc/img/sd-elapsed-time-by-operation-and-db.png" alt="Standard Deviation Comp"></p>
+<p>Running two sided 
+<a href="http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm">significant tests</a> 
+on each combination of operation and file size provides P-Values at the 95% 
+confidence level or higher. This indicates that our measurements are not the 
+result of a statistical fluke and KFS introduces meaningful change. </p>
+<p><img src="/doc/img/kfs-vs-vanilla-two-sided-test.png" alt="Two Sided Test"></p>
+<h3>Conclusion</h3><p>While P-Values should not be followed blindly, the data does indicate that 
+the KFS protocol gives statistically significant gains in speed and consistency.</p>
 </article>
 
 </section>
