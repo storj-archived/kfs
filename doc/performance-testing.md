@@ -35,15 +35,15 @@ Since data is spread in a uniform fashion across a series of LevelDBs in KFS,
 this compaction triggering happens less frequently and has a much smaller 
 impact.
 
-![Summary Chart](img/performance-test-overview-kfs-vs-vanilla.png)
+![Summary Chart](doc/img/performance-test-overview-kfs-vs-vanilla.png)
 
 Upon closer inspection the data shows that in every category the mean execution
 time is lower for KFS for all categories. As for variance, vanilla LevelDB is
 vastly greater than KFS for writes and unlinks but more consistent for reads.
 
-![Mean Comparison](img/mean-elapsed-time-by-operation-and-db.png)
+![Mean Comparison](doc/img/mean-elapsed-time-by-operation-and-db.png)
 
-![Standard Deviation Comp](img/sd-elapsed-time-by-operation-and-db.png)
+![Standard Deviation Comp](doc/img/sd-elapsed-time-by-operation-and-db.png)
 
 Running two sided 
 [significant tests](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm) 
@@ -51,7 +51,7 @@ on each combination of operation and file size provides P-Values at the 95%
 confidence level or higher. This indicates that our measurements are not the 
 result of a statistical fluke and KFS introduces meaningful change. 
 
-![Two Sided Test](img/kfs-vs-vanilla-two-sided-test.png)
+![Two Sided Test](doc/img/kfs-vs-vanilla-two-sided-test.png)
 
 ### Conclusion 
 
