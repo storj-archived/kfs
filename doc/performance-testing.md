@@ -37,7 +37,7 @@ impact.
 
 ![Summary Chart](/doc/img/performance-test-overview-kfs-vs-vanilla.png)
 
-Upon closer inspection the data show that in every category the mean execution
+Upon closer inspection the data shows that in every category the mean execution
 time is lower for KFS for all categories. As for variance, vanilla LevelDB is
 vastly greater than KFS for writes and unlinks but more consistent for reads.
 
@@ -46,7 +46,7 @@ vastly greater than KFS for writes and unlinks but more consistent for reads.
 ![Standard Deviation Comp](/doc/img/sd-elapsed-time-by-operation-and-db.png)
 
 Running two sided 
-[significant tests](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm)) 
+[significant tests](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm) 
 on each combination of operation and file size provides P-Values at the 95% 
 confidence level or higher. This indicates that our measurements are not the 
 result of a statistical fluke and KFS introduces meaningful change. 
