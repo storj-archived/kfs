@@ -31,9 +31,10 @@ vastly greater than KFS for writes and unlinks but more consistent for reads.
 
 Running two sided significant tests ([Tests of Significance](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm)) on each combination of operation and file size
 provides P-Values at the 95% confidence level or higher. This indicates that our 
-measurement are no the result of a statistical fluke and KFS introduces meaninful 
-change. 
+measurement are no the result of a statistical fluke and KFS introduces meaningful change. 
+
 ![Two Sided Test](/doc/img/KFS_vs_Vanilla_TwoSidedTest.png)
+
 ### Conclusion 
 While P-Values should not be followed blindly, the data does indicate that 
 the KFS protocol gives statistically significant gains in speed and consistency.
