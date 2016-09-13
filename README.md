@@ -119,7 +119,7 @@ Below is the frequency distribution plotted with ten million simulated calculati
 As expected the distribution is uniform (the red dotted line indicates the theoretical
 value each bin should have): 
 
-![Frequency Distribution](doc/img/xor_metric_distribution.png)
+![Frequency Distribution](doc/img/xor-metric-distribution.png)
 
 Even with a uniform distribution, as the node reaches capacity some buckets will fill sooner than others. 
 Offers that would be sorted into these buckets should be declined and relayed to other nodes.
