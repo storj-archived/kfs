@@ -35,12 +35,12 @@ To check the available space for a file at a given key, use the
 ```
 var fileSizeInBytes = 4096;
 
-myDataStore.getSpaceAvailableForKey(some160bitKey, function(err, freeSpace) {
+myDataStore.stat(some160bitKey, function(err, result) {
   if (err) {
     // handle error
   }
 
-  var enoughFreeSpace = freeSpace > fileSizeInBytes;
+  var enoughFreeSpace = result.sBucketStats.free > fileSizeInBytes;
 
   console.log('There ' + (enoughFreeSpace ? 'IS': 'IS NOT') + ' enough space!');
 });
