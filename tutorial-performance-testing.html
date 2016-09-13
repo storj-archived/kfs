@@ -118,18 +118,18 @@ in LevelDB as the size of the single instance grows quickly.</p>
 <p>Since data is spread in a uniform fashion across a series of LevelDBs in KFS, 
 this compaction triggering happens less frequently and has a much smaller 
 impact.</p>
-<p><img src="/doc/img/performance-test-overview-kfs-vs-vanilla.png" alt="Summary Chart"></p>
+<p><img src="img/performance-test-overview-kfs-vs-vanilla.png" alt="Summary Chart"></p>
 <p>Upon closer inspection the data shows that in every category the mean execution
 time is lower for KFS for all categories. As for variance, vanilla LevelDB is
 vastly greater than KFS for writes and unlinks but more consistent for reads.</p>
-<p><img src="/doc/img/mean-elapsed-time-by-operation-and-db.png" alt="Mean Comparison"></p>
-<p><img src="/doc/img/sd-elapsed-time-by-operation-and-db.png" alt="Standard Deviation Comp"></p>
+<p><img src="img/mean-elapsed-time-by-operation-and-db.png" alt="Mean Comparison"></p>
+<p><img src="img/sd-elapsed-time-by-operation-and-db.png" alt="Standard Deviation Comp"></p>
 <p>Running two sided 
 <a href="http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm">significant tests</a> 
 on each combination of operation and file size provides P-Values at the 95% 
 confidence level or higher. This indicates that our measurements are not the 
 result of a statistical fluke and KFS introduces meaningful change. </p>
-<p><img src="/doc/img/kfs-vs-vanilla-two-sided-test.png" alt="Two Sided Test"></p>
+<p><img src="img/kfs-vs-vanilla-two-sided-test.png" alt="Two Sided Test"></p>
 <h3>Conclusion</h3><p>While P-Values should not be followed blindly, the data does indicate that 
 the KFS protocol gives statistically significant gains in speed and consistency.</p>
 </article>
