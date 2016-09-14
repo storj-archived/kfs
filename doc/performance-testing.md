@@ -67,3 +67,17 @@ result of a statistical fluke and KFS introduces meaningful change.
 
 While P-Values should not be followed blindly, the data does indicate that 
 the KFS protocol gives statistically significant gains in speed and consistency.
+
+To reproduce the data generated for these tests:
+
+* Clone this git repository
+* Make sure you have Node.js and NPM installed
+* Run `npm install` from the project root directory
+* Run `npm run benchmark [iterations] [path_to_write_results]`
+
+You can set the path to the database to create using the `KFS_PERF_DIR` 
+environment variable for testing on different types of drives. If no path to 
+write results to is specified, they will be written to stdout.
+
+If you want to experiment with chunk size (discrete key/value pairs associated 
+with a file), modify the `C` constant in `lib/constants.js`.

@@ -20,7 +20,8 @@ npm install kfs --save
 ```
 
 This will install `kfs` as a dependency of your own project. See the 
-[documentation] for usage details.
+[documentation] for usage details. You can also install globally to 
+use the `kfs` command line utility.
 
 Motivation
 ----------
