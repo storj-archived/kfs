@@ -21,7 +21,8 @@ number of trials is consistent with our assertion that LevelDBs performance
 degrades significantly after the size of the database exceeds 100GiB.
 
 This experiment was conducted for both a vanilla (standard) LevelDB and a 
-version using the KFS protocol. All trials used a solid state drive (SSD). 
+version using the KFS protocol. In addition we ran the experiment using 
+a hard disk drive (HDD) and solid state drive (SSD). 
 
 ### Results 
 
@@ -44,15 +45,20 @@ impact.
 ---
 
 Upon closer inspection the data shows that in every category the mean execution
-time is lower for KFS for all categories. As for variance, vanilla LevelDB is
-vastly greater than KFS for writes and unlinks but more consistent for reads.
+time is lower for KFS for all categories. As for variance, the story is a bit more 
+complicated. On SSD vanilla LevelDB has much greater variance than KFS for writes and 
+unlinks but more consistent for reads. On HDD both KFS and vanilla show greater 
+variance, but again KFS performs more consistently on writes and unlinks. 
 
 ---
+
+Mean execution time comparison for SSD and HDD. 
 
 ![Mean Comparison SSD](doc/img/mean-elapsed-time-by-operation-and-db-ssd.png)
 
 ![Mean Comparison HDD](doc/img/mean-elapsed-time-by-operation-and-db-hdd.png)
 
+Standard deviation execution time comparison for SSD and HDD. 
 
 ![Standard Deviation Comp SSD](doc/img/sd-elapsed-time-by-operation-and-db-ssd.png)
 
@@ -61,11 +67,16 @@ vastly greater than KFS for writes and unlinks but more consistent for reads.
 
 ---
 
-Running two sided 
+We ran two sided 
 [significant tests](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm) 
-on each combination of operation and file size provides P-Values at the 95% 
-confidence level or higher. This indicates that our measurements are not the 
-result of a statistical fluke and KFS introduces meaningful change. 
+on each combination of operation and file size with a p-value cut-off at .05.
+For reads at 64, 128 and 256 MiB file sizes, along with unlinks at 32 MiB we are 
+unable to reject the null hypothesis. Or in other words, we are unable to suggest KFS 
+performs better than a vanilla LevelDb in those scenarios. For the rest, we did achieve 
+a 95% confidence level. This suggests that our measurements are not the 
+result of a statistical fluke and KFS introduces meaningful change for those operations 
+and file sizes. Please note that any confidence level of 100% is an artifact of rounding. 
+In this scenarioma p-value of 0 is theoretically impossible.
 
 ---
 
