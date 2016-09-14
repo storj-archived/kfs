@@ -41,14 +41,14 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
+					<li><a href="BlockStream.html">BlockStream</a></li><li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+					<li><a href="BlockStream.html#event:data">BlockStream#event:data</a></li><li><a href="BlockStream.html#event:end">BlockStream#event:end</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -100,6 +100,7 @@ var constants = require('./constants');
 var utils = require('./utils');
 var WritableFileStream = require('./write-stream');
 var ReadableFileStream = require('./read-stream');
+var BlockStream = require('./block-stream');
 var async = require('async');
 
 /**
@@ -163,7 +164,8 @@ Sbucket.DEFAULTS = {
   writeBufferSize: 4 * (1024 * 1024),
   blockSize: 4096,
   blockRestartInterval: 16,
-  maxSize: constants.S
+  maxSize: constants.S,
+  chunkSize: constants.C
 };
 
 /**
@@ -372,8 +374,8 @@ Sbucket.prototype.writeFile = function(key, buffer, callback) {
   var whichSlice = 0;
 
   function _writeFileSlice() {
-    var startIndex = whichSlice * constants.C;
-    var endIndex = startIndex + constants.C;
+    var startIndex = whichSlice * self._options.chunkSize;
+    var endIndex = startIndex + self._options.chunkSize;
     var bufferSlice = buffer.slice(startIndex, endIndex);
 
     if (bufferSlice.length === 0) {
@@ -427,15 +429,19 @@ Sbucket.prototype.createReadStream = function(key) {
  * @returns {WritableFileStream}
  */
 Sbucket.prototype.createWriteStream = function(key) {
+  var bs = new BlockStream({
+    chunkSize: this._options.chunkSize,
+    padLastChunk: false
+  });
   var ws = new WritableFileStream({
     sBucket: this,
     fileKey: key
   });
 
   this._incPendingOps();
-  ws.on('finish', this._decPendingOps.bind(this));
+  bs.pipe(ws).on('finish', this._decPendingOps.bind(this));
 
-  return ws;
+  return bs;
 };
 
 /**
@@ -503,8 +509,8 @@ Sbucket.prototype.list = function(callback) {
 
       currentResult = key.split(' ')[0];
       keys[currentResult] = keys[currentResult] ?
-                            keys[currentResult] + constants.C :
-                            constants.C;
+                            keys[currentResult] + self._options.chunkSize :
+                            self._options.chunkSize;
 
       next();
     });

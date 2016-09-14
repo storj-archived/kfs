@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>KFS Class: WritableFileStream</title>
+	<title>KFS Class: BlockStream</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -85,13 +85,13 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: WritableFileStream</h1>
+	<h1 class="page-title">Class: BlockStream</h1>
 <section>
 
 <header>
     
         <h2>
-        WritableFileStream
+        BlockStream
         </h2>
         
     
@@ -104,7 +104,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="WritableFileStream"><span class="type-signature"></span>new WritableFileStream(options)</h4>
+    <h4 class="name" id="BlockStream"><span class="type-signature"></span>new BlockStream( [options])</h4>
     
     
 </dt>
@@ -112,7 +112,7 @@
 
     
     <div class="description">
-        Creates a writable stream for storing a file in an <a href="Sbucket.html">Sbucket</a>
+        Transforms the input stream into an output stream of N-sized chunks
     </div>
     
 
@@ -134,6 +134,8 @@
 
         <th>Type</th>
 
+        
+        <th>Argument</th>
         
 
         
@@ -161,6 +163,16 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -178,7 +190,11 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -190,13 +206,13 @@
 
         <tr>
             
-                <td class="name"><code>sBucket</code></td>
+                <td class="name"><code>chunkSize</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Sbucket.html">Sbucket</a></span>
+<span class="param-type">Number</span>
 
 
 
@@ -204,23 +220,39 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last">The S-bucket this stream will write to</td>
+            
+                <td class="default">
+                
+                    constants.C
+                
+                </td>
+            
+
+            <td class="description last">The bytes of each chunk</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>fileKey</code></td>
+                <td class="name"><code>padLastChunk</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Boolean</span>
 
 
 
@@ -228,10 +260,26 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last">The key for the file to write to</td>
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">Pad the last chunk with zeros</td>
         </tr>
 
     
@@ -282,7 +330,7 @@
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="lib_write-stream.js.html">lib/write-stream.js</a>
+				<a href="lib_block-stream.js.html">lib/block-stream.js</a>
 			</li>
 		</ul>
 	</dd>
@@ -326,147 +374,6 @@
 
     
 
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id="destroy"><span class="type-signature"></span>destroy(callback)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Destroys and aborts any writes for this stream
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Sbucket.html#~unlinkCallback">Sbucket~unlinkCallback</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="lib_write-stream.js.html">lib/write-stream.js</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        </dl>
     
 
     
@@ -478,7 +385,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="event:error">error</h4>
+    <h4 class="name" id="event:data">data</h4>
     
     
 </dt>
@@ -486,7 +393,7 @@
 
     
     <div class="description">
-        Triggered if an error occurs
+        Triggered when data is available
     </div>
     
 
@@ -521,13 +428,13 @@
 
         <tr>
             
-                <td class="name"><code>error</code></td>
+                <td class="name"><code>chunk</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Error</span>
+<span class="param-type">Buffer</span>
 
 
 
@@ -582,7 +489,7 @@
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="lib_write-stream.js.html">lib/write-stream.js</a>
+				<a href="lib_block-stream.js.html">lib/block-stream.js</a>
 			</li>
 		</ul>
 	</dd>
@@ -615,7 +522,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="event:finish">finish</h4>
+    <h4 class="name" id="event:end">end</h4>
     
     
 </dt>
@@ -623,7 +530,7 @@
 
     
     <div class="description">
-        Triggered when data is finished writing
+        Triggered when the stream is ended
     </div>
     
 
@@ -669,7 +576,7 @@
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="lib_write-stream.js.html">lib/write-stream.js</a>
+				<a href="lib_block-stream.js.html">lib/block-stream.js</a>
 			</li>
 		</ul>
 	</dd>

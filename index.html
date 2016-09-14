@@ -41,14 +41,14 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
+					<li><a href="BlockStream.html">BlockStream</a></li><li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+					<li><a href="BlockStream.html#event:data">BlockStream#event:data</a></li><li><a href="BlockStream.html#event:end">BlockStream#event:end</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
 				</ul>
 			</li>
 			
@@ -117,7 +117,8 @@ content-addressable data is placed in a shard using the same routing metric
 and algorithm used by the <a href="https://en.wikipedia.org/wiki/Kademlia" title="Kademlia">Kademlia</a> distributed hash table.</p>
 <h2>Quick Start</h2><p>Install the <code>kfs</code> package using <a href="https://npmjs.org" title="Node Package Manager">Node Package Manager</a>.</p>
 <pre class="prettyprint source"><code>npm install kfs --save</code></pre><p>This will install <code>kfs</code> as a dependency of your own project. See the 
-<a href="http://bookch.in/kfs/" title="Package Documentation">documentation</a> for usage details.</p>
+<a href="http://bookch.in/kfs/" title="Package Documentation">documentation</a> for usage details. You can also install globally to 
+use the <code>kfs</code> command line utility.</p>
 <h2>Motivation</h2><p>The Storj network consists of a number of distributed peers who provide 
 storage capacity for lease to others. In its current implementation, these 
 nodes store encrypted shards and their associated metadata in a <a href="http://leveldb.org/" title="LevelDB">LevelDB</a>. 
