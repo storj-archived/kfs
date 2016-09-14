@@ -1,4 +1,4 @@
-_KFS is a local file storage system inspired by Kademlia._
+**KFS is a local file storage system inspired by Kademlia.**
 
 [![Build Status](https://img.shields.io/travis/storj/kfs.svg?style=flat-square)](https://travis-ci.org/storj/kfs)
 [![Coverage Status](https://img.shields.io/coveralls/storj/kfs.svg?style=flat-square)](https://coveralls.io/r/storj/kfs)
