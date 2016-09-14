@@ -76,7 +76,7 @@ performs better than a vanilla LevelDb in those scenarios. For the rest, we did 
 a 95% confidence level. This suggests that our measurements are not the 
 result of a statistical fluke and KFS introduces meaningful change for those operations 
 and file sizes. Please note that any confidence level of 100% is an artifact of rounding. 
-In this scenarioma p-value of 0 is theoretically impossible.
+In this scenario a p-value of 0 is theoretically impossible.
 
 ---
 
