@@ -54,15 +54,15 @@ variance, but again KFS performs more consistently on writes and unlinks.
 
 Mean execution time comparison for SSD and HDD. 
 
-![Mean Comparison SSD](doc/img/mean-elapsed-time-by-operation-and-db-ssd.png)
+![Mean Comparison SSD](doc/img/mean-by-operation-and-db-ssd.png)
 
-![Mean Comparison HDD](doc/img/mean-elapsed-time-by-operation-and-db-hdd.png)
+![Mean Comparison HDD](doc/img/mean-by-operation-and-db-hdd.png)
 
 Standard deviation execution time comparison for SSD and HDD. 
 
-![Standard Deviation Comp SSD](doc/img/sd-elapsed-time-by-operation-and-db-ssd.png)
+![Standard Deviation Comp SSD](doc/img/sd-by-operation-and-db-ssd.png)
 
-![Standard Deviation Comp HDD](doc/img/sd-elapsed-time-by-operation-and-db-hdd.png)
+![Standard Deviation Comp HDD](doc/img/sd-by-operation-and-db-hdd.png)
 
 
 ---
