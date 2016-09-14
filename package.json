@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bookchin/kfs.git"
+    "url": "git+https://github.com/storj/kfs.git"
   },
   "keywords": [
     "kad",
@@ -32,9 +32,9 @@
   "author": "Gordon Hall <gordon@gordonwritescode.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/bookchin/kfs/issues"
+    "url": "https://github.com/storj/kfs/issues"
   },
-  "homepage": "https://github.com/bookchin/kfs#readme",
+  "homepage": "https://github.com/storj/kfs#readme",
   "dependencies": {
     "async": "^2.0.1",
     "commander": "^2.9.0",
