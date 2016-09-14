@@ -110,7 +110,8 @@ the full size of the database (since unlinks only tombstone entries). Our
 number of trials is consistent with our assertion that LevelDBs performance 
 degrades significantly after the size of the database exceeds 100GiB.</p>
 <p>This experiment was conducted for both a vanilla (standard) LevelDB and a 
-version using the KFS protocol. All trials used a solid state drive (SSD). </p>
+version using the KFS protocol. In addition we ran the experiment using 
+a hard disk drive (HDD) and solid state drive (SSD). </p>
 <h3>Results</h3><p>An overview plot displaying the execution time by file size and operation for 
 each trial indicates some difference between KFS and a vanilla LevelDB. At a 
 high level it appears vanilla LevelDB had a higher variance across many 
@@ -120,20 +121,32 @@ in LevelDB as the size of the single instance grows quickly.</p>
 this compaction triggering happens less frequently and has a much smaller 
 impact.</p>
 <hr>
-<p><img src="doc/img/performance-test-overview-kfs-vs-vanilla.png" alt="Summary Chart"></p>
+<p><img src="doc/img/performance-test-overview-kfs-vs-vanilla-ssd.png" alt="Summary Chart SSD"></p>
+<p><img src="doc/img/performance-test-overview-kfs-vs-vanilla-hdd.png" alt="Summary Chart HDD"></p>
 <hr>
 <p>Upon closer inspection the data shows that in every category the mean execution
-time is lower for KFS for all categories. As for variance, vanilla LevelDB is
-vastly greater than KFS for writes and unlinks but more consistent for reads.</p>
+time is lower for KFS for all categories. As for variance, the story is a bit more 
+complicated. On SSD vanilla LevelDB has much greater variance than KFS for writes and 
+unlinks but more consistent for reads. On HDD both KFS and vanilla show greater 
+variance, but again KFS performs more consistently on writes and unlinks. </p>
 <hr>
-<p><img src="doc/img/mean-elapsed-time-by-operation-and-db.png" alt="Mean Comparison"></p>
-<p><img src="doc/img/sd-elapsed-time-by-operation-and-db.png" alt="Standard Deviation Comp"></p>
+<p>Mean execution time comparison for SSD and HDD. </p>
+<p><img src="doc/img/mean-elapsed-time-by-operation-and-db-ssd.png" alt="Mean Comparison SSD"></p>
+<p><img src="doc/img/mean-elapsed-time-by-operation-and-db-hdd.png" alt="Mean Comparison HDD"></p>
+<p>Standard deviation execution time comparison for SSD and HDD. </p>
+<p><img src="doc/img/sd-elapsed-time-by-operation-and-db-ssd.png" alt="Standard Deviation Comp SSD"></p>
+<p><img src="doc/img/sd-elapsed-time-by-operation-and-db-hdd.png" alt="Standard Deviation Comp HDD"></p>
 <hr>
-<p>Running two sided 
+<p>We ran two sided 
 <a href="http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm">significant tests</a> 
-on each combination of operation and file size provides P-Values at the 95% 
-confidence level or higher. This indicates that our measurements are not the 
-result of a statistical fluke and KFS introduces meaningful change. </p>
+on each combination of operation and file size with a p-value cut-off at .05.
+For reads at 64, 128 and 256 MiB file sizes, along with unlinks at 32 MiB we are 
+unable to reject the null hypothesis. Or in other words, we are unable to suggest KFS 
+performs better than a vanilla LevelDb in those scenarios. For the rest, we did achieve 
+a 95% confidence level. This suggests that our measurements are not the 
+result of a statistical fluke and KFS introduces meaningful change for those operations 
+and file sizes. Please note that any confidence level of 100% is an artifact of rounding. 
+In this scenario a p-value of 0 is theoretically impossible.</p>
 <hr>
 <p><img src="doc/img/kfs-vs-vanilla-two-sided-test.png" alt="Two Sided Test"></p>
 <h3>Conclusion</h3><p>While P-Values should not be followed blindly, the data does indicate that 
