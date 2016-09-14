@@ -9,18 +9,19 @@
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
-	<link type="text/css" rel="stylesheet" href="styles/sunlight.dark.css">
 
-	<link type="text/css" rel="stylesheet" href="styles/site.lumen.css">
+	<script src="scripts/highlight.min.js"></script>
+
+	<link type="text/css" rel="stylesheet" href="styles/site.storj.css">
 
 </head>
 
 <body>
 
-<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="navbar navbar-default navbar-fixed-top ">
 <div class="container">
 	<div class="navbar-header">
-		<a class="navbar-brand" href="index.html">KFS</a>
+		<a class="navbar-brand" style="background-image:url(img/storj-kfs.svg)"  href="index.html">KFS</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -59,12 +60,12 @@
 			</li>
 			
 		</ul>
-		<div class="col-sm-3 col-md-3">
+		<div class="col-sm-3 col-md-4">
             <form class="navbar-form" role="search">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
                     <div class="input-group-btn">
-                        <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        <button class="btn btn-primary" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
                     </div>
                 </div>
             </form>
@@ -105,11 +106,11 @@
 
 
     <section class="readme-section">
-        <article><h1>KFS</h1><p>KFS is a local file storage system inspired by Kademlia.</p>
-<p><a href="https://travis-ci.org/bookchin/kfs"><img src="https://img.shields.io/travis/bookchin/kfs.svg?style=flat-square" alt="Build Status"></a>
-<a href="https://coveralls.io/r/bookchin/kfs"><img src="https://img.shields.io/coveralls/bookchin/kfs.svg?style=flat-square" alt="Coverage Status"></a>
+        <article><p><strong>KFS is a local file storage system inspired by Kademlia.</strong></p>
+<p><a href="https://travis-ci.org/storj/kfs"><img src="https://img.shields.io/travis/storj/kfs.svg?style=flat-square" alt="Build Status"></a>
+<a href="https://coveralls.io/r/storj/kfs"><img src="https://img.shields.io/coveralls/storj/kfs.svg?style=flat-square" alt="Coverage Status"></a>
 <a href="https://www.npmjs.com/package/kfs"><img src="https://img.shields.io/npm/v/kfs.svg?style=flat-square" alt="NPM"></a>
-<a href="https://raw.githubusercontent.com/bookchin/kfs/master/LICENSE"><img src="https://img.shields.io/badge/license-GPL3.0-blue.svg?style=flat-square" alt="License"></a></p>
+<a href="https://raw.githubusercontent.com/storj/kfs/master/LICENSE"><img src="https://img.shields.io/badge/license-GPL3.0-blue.svg?style=flat-square" alt="License"></a></p>
 <p>The KFS system describes a method for managing the storage layer of nodes on 
 the <a href="https://storj.io" title="Storj Labs">Storj Network</a> by creating a sharded local database where 
 content-addressable data is placed in a shard using the same routing metric
@@ -239,7 +240,7 @@ in the context of the Storj network would include contracts and other special
 information related to a piece of data. Applications should handle this via 
 their own means.</li>
 </ul>
-<h2>License</h2><p>KFS - A Local File Storage System Inspired by Kademlia<br>Copyright (C) 2016 Gordon Hall</p>
+<h2>License</h2><p>KFS - A Local File Storage System Inspired by Kademlia<br>Copyright (C) 2016 Storj Labs, Inc</p>
 <p>This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -291,7 +292,7 @@ along with this program.  If not, see [http://www.gnu.org/licenses/].</p></artic
 
 
 	<span class="copyright">
-	Copyright 2016 Gordon Hall
+	Copyright 2016 Storj Labs, Inc
 	</span>
 
 <span class="jsdoc-message">
@@ -331,18 +332,16 @@ $( function () {
 		if ( lang ) {
 
 			$this
-			.addClass( "sunlight-highlight-" + lang )
+			.addClass( lang )
 			.addClass( "linenums" )
 			.html( example.html() );
 
 		}
 	} );
 
-	Sunlight.highlightAll( {
-		lineNumbers : false,
-		showMenu : true,
-		enableDoclinks : true
-	} );
+	$('pre').each(function(i, block) {
+		hljs.highlightBlock(block);
+	});
 
 	$.catchAnchorLinks( {
         navbarOffset: 10
