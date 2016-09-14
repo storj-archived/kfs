@@ -37,7 +37,7 @@ impact.
 
 ---
 
-![Summary Chart](../doc/img/performance-test-overview-kfs-vs-vanilla.png)
+![Summary Chart](doc/img/performance-test-overview-kfs-vs-vanilla.png)
 
 ---
 
@@ -47,9 +47,9 @@ vastly greater than KFS for writes and unlinks but more consistent for reads.
 
 ---
 
-![Mean Comparison](../doc/img/mean-elapsed-time-by-operation-and-db.png)
+![Mean Comparison](doc/img/mean-elapsed-time-by-operation-and-db.png)
 
-![Standard Deviation Comp](../doc/img/sd-elapsed-time-by-operation-and-db.png)
+![Standard Deviation Comp](doc/img/sd-elapsed-time-by-operation-and-db.png)
 
 ---
 
@@ -61,7 +61,7 @@ result of a statistical fluke and KFS introduces meaningful change.
 
 ---
 
-![Two Sided Test](../doc/img/kfs-vs-vanilla-two-sided-test.png)
+![Two Sided Test](doc/img/kfs-vs-vanilla-two-sided-test.png)
 
 ### Conclusion 
 
