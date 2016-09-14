@@ -9,25 +9,24 @@ Once the installation completes, you can use the `kfs` command. To see usage
 information, run:
 
 ```
-> $ kfs --help
-
-  Usage: kfs [options] [command]
+Usage: kfs [options] [command]
 
 
   Commands:
 
-    write <file_key> [file_path]  write the file to the database (or read from stdin)
-    read <file_key> [file_path]   read the file from the database (or write to stdout)
-    unlink <file_key>             unlink (delete) the file from the database
-    stat [options] <file_key>     get the available space for a file key
-    *                             print usage information to the console
+    write <file_key> [file_path]                 write the file to the database (or read from stdin)
+    read <file_key> [file_path]                  read the file from the database (or write to stdout)
+    unlink <file_key>                            unlink (delete) the file from the database
+    list [options] <bucket_index_or_file_index>  list all of the file keys in the given bucket
+    stat [options] [bucket_index_or_file_key]    get the free and used space for the database 
+    compact                                      trigger a compaction of all database buckets
+    *                                            print usage information to the console
 
   Options:
 
     -h, --help          output usage information
     -V, --version       output the version number
     -d, --db <db_path>  path the kfs database to use (default: /home/bookchin/.kfs/default)
-
 ```
 
 ### Writing a File To KFS
