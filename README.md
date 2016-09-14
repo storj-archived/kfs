@@ -1,7 +1,7 @@
 **KFS is a local file storage system inspired by Kademlia.**
 
-[![Build Status](https://img.shields.io/travis/storj/kfs.svg?style=flat-square)](https://travis-ci.org/storj/kfs)
-[![Coverage Status](https://img.shields.io/coveralls/storj/kfs.svg?style=flat-square)](https://coveralls.io/r/storj/kfs)
+[![Build Status](https://img.shields.io/travis/Storj/kfs.svg?style=flat-square)](https://travis-ci.org/Storj/kfs)
+[![Coverage Status](https://img.shields.io/coveralls/Storj/kfs.svg?style=flat-square)](https://coveralls.io/r/Storj/kfs)
 [![NPM](https://img.shields.io/npm/v/kfs.svg?style=flat-square)](https://www.npmjs.com/package/kfs)
 [![License](https://img.shields.io/badge/license-GPL3.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/storj/kfs/master/LICENSE)
 
