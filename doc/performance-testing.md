@@ -37,7 +37,9 @@ impact.
 
 ---
 
-![Summary Chart](doc/img/performance-test-overview-kfs-vs-vanilla.png)
+![Summary Chart SSD](doc/img/performance-test-overview-kfs-vs-vanilla-ssd.png)
+
+![Summary Chart HDD](doc/img/performance-test-overview-kfs-vs-vanilla-hdd.png)
 
 ---
 
@@ -47,9 +49,15 @@ vastly greater than KFS for writes and unlinks but more consistent for reads.
 
 ---
 
-![Mean Comparison](doc/img/mean-elapsed-time-by-operation-and-db.png)
+![Mean Comparison SSD](doc/img/mean-elapsed-time-by-operation-and-db-ssd.png)
 
-![Standard Deviation Comp](doc/img/sd-elapsed-time-by-operation-and-db.png)
+![Mean Comparison HDD](doc/img/mean-elapsed-time-by-operation-and-db-hdd.png)
+
+
+![Standard Deviation Comp SSD](doc/img/sd-elapsed-time-by-operation-and-db-ssd.png)
+
+![Standard Deviation Comp HDD](doc/img/sd-elapsed-time-by-operation-and-db-hdd.png)
+
 
 ---
 
