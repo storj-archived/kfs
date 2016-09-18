@@ -101,10 +101,10 @@ This is a short summary of our findings and their implications. </p>
 <h3>Experiment Design</h3><p>A series of one hundred trials were run in sequential order. 
 Each trial consisted of measuring the execution time for a complete read, 
 write, and unlink (delete) operation on file sizes of 8, 16, 32, 64, 128, 256 
-and 512 MiB. Keeping in mind that files are split into discrete 64KiB key/value 
+and 512 MiB. Keeping in mind that files are split into discrete 128KiB key/value 
 pairs, keyed by a hash of the content of the entire file, this means that the 
 actual number of read/write/delete operations are equal to the size of the file
-divided by 64KiB.</p>
+divided by 128KiB.</p>
 <p>Of particular note is that each sequential test run adds approximately 1GiB to 
 the full size of the database (since unlinks only tombstone entries). Our 
 number of trials is consistent with our assertion that LevelDBs performance 
