@@ -38,9 +38,9 @@ impact.
 
 ---
 
-![Summary Chart SSD](doc/img/performance-test-overview-kfs-vs-vanilla-ssd.png)
+![Summary Chart SSD](doc/img/performance-test-overview-kfs-vs-vanilla-ssd-128.png)
 
-![Summary Chart HDD](doc/img/performance-test-overview-kfs-vs-vanilla-hdd.png)
+![Summary Chart HDD](doc/img/performance-test-overview-kfs-vs-vanilla-hdd-128.png)
 
 ---
 
@@ -54,15 +54,15 @@ variance, but again KFS performs more consistently on writes and unlinks.
 
 Mean execution time comparison for SSD and HDD. 
 
-![Mean Comparison SSD](doc/img/mean-by-operation-and-db-ssd.png)
+![Mean Comparison SSD](doc/img/mean-by-operation-and-db-ssd-128.png)
 
-![Mean Comparison HDD](doc/img/mean-by-operation-and-db-hdd.png)
+![Mean Comparison HDD](doc/img/mean-by-operation-and-db-hdd-128.png)
 
 Standard deviation execution time comparison for SSD and HDD. 
 
-![Standard Deviation Comp SSD](doc/img/sd-by-operation-and-db-ssd.png)
+![Standard Deviation Comp SSD](doc/img/sd-by-operation-and-db-ssd-128.png)
 
-![Standard Deviation Comp HDD](doc/img/sd-by-operation-and-db-hdd.png)
+![Standard Deviation Comp HDD](doc/img/sd-by-operation-and-db-hdd-128.png)
 
 
 ---
@@ -70,7 +70,7 @@ Standard deviation execution time comparison for SSD and HDD.
 We ran two sided 
 [significant tests](http://www.stat.yale.edu/Courses/1997-98/101/sigtest.htm) 
 on each combination of operation and file size with a p-value cut-off at .05.
-For reads at 64, 128 and 256 MiB file sizes, along with unlinks at 32 MiB we are 
+For reads at 8, 16, 32, 64, 128 and 256 MiB file sizes, along with unlinks at 64 MiB we are 
 unable to reject the null hypothesis. Or in other words, we are unable to suggest KFS 
 performs better than a vanilla LevelDb in those scenarios. For the rest, we did achieve 
 a 95% confidence level. This suggests that our measurements are not the 
@@ -80,7 +80,7 @@ In this scenario a p-value of 0 is theoretically impossible.
 
 ---
 
-![Two Sided Test](doc/img/kfs-vs-vanilla-two-sided-test.png)
+![Two Sided Test](doc/img/kfs-vs-vanilla-two-sided-test-128.png)
 
 ### Conclusion 
 
