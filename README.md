@@ -20,7 +20,8 @@ npm install kfs --save
 ```
 
 This will install `kfs` as a dependency of your own project. See the 
-[documentation] for usage details.
+[documentation](https://storj.github.io/kfs/) for usage details. You can also install globally to 
+use the `kfs` command line utility.
 
 Motivation
 ----------
@@ -94,7 +95,7 @@ strings and consist of:
 The number of preceding zeroes in the numerical index should be set such that 
 a S-Bucket that contains only a single file split into `C` sized chunks  can 
 still be read sequentially from the database. Using the default constants 
-would make the highest number index 524288, so the number of leading zeroes 
+would make the highest number index 262144, so the number of leading zeroes 
 should be less than or equal to five.
 
 ### Ad-Hoc S-Bucket Initialization
@@ -128,7 +129,7 @@ Constants
 |------|------------------------------------|-----------------------|
 | B    | Number of columns in the B-table   | 256                   |
 | S    | Size (in bytes) of an S-Bucket     | 34359738368 (32GiB)   |
-| C    | Size (in bytes) of a file chunk    | 65536                 |
+| C    | Size (in bytes) of a file chunk    | 131072                |
 | R    | Number of bits in the Reference ID | 160                   |
 
 Considerations Specific to Storj

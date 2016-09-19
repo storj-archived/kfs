@@ -10,10 +10,10 @@ This is a short summary of our findings and their implications.
 A series of one hundred trials were run in sequential order. 
 Each trial consisted of measuring the execution time for a complete read, 
 write, and unlink (delete) operation on file sizes of 8, 16, 32, 64, 128, 256 
-and 512 MiB. Keeping in mind that files are split into discrete 64KiB key/value 
+and 512 MiB. Keeping in mind that files are split into discrete 128KiB key/value 
 pairs, keyed by a hash of the content of the entire file, this means that the 
 actual number of read/write/delete operations are equal to the size of the file
-divided by 64KiB.
+divided by 128KiB.
 
 Of particular note is that each sequential test run adds approximately 1GiB to 
 the full size of the database (since unlinks only tombstone entries). Our 
@@ -86,3 +86,17 @@ In this scenario a p-value of 0 is theoretically impossible.
 
 While P-Values should not be followed blindly, the data does indicate that 
 the KFS protocol gives statistically significant gains in speed and consistency.
+
+To reproduce the data generated for these tests:
+
+* Clone this git repository
+* Make sure you have Node.js and NPM installed
+* Run `npm install` from the project root directory
+* Run `npm run benchmark [iterations] [path_to_write_results]`
+
+You can set the path to the database to create using the `KFS_PERF_DIR` 
+environment variable for testing on different types of drives. If no path to 
+write results to is specified, they will be written to stdout.
+
+If you want to experiment with chunk size (discrete key/value pairs associated 
+with a file), modify the `C` constant in `lib/constants.js`.
