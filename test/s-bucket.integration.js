@@ -45,7 +45,6 @@ describe('Sbucket/Integration', function() {
     it('should list all of the files', function(done) {
       bucket.list(function(err, list) {
         expect(list).to.have.lengthOf(3);
-        console.log(list);
         done();
       });
     });

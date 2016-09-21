@@ -199,4 +199,53 @@ describe('Sbucket', function() {
 
   });
 
+  describe('#_checkIdleState', function() {
+
+    it('should emit the idle event if idle for 60000ms', function(done) {
+      var sBucket = new Sbucket('test');
+      var clock = sinon.useFakeTimers();
+      sBucket._checkIdleState();
+      sBucket.once('idle', done);
+      clock.tick(60000);
+      clock.restore();
+    });
+
+  });
+
+  describe('#_emitIfStateIsIdle', function() {
+
+    it('should emit the idle event if idle', function() {
+      var sBucket = new Sbucket('test');
+      expect(sBucket._emitIfStateIsIdle()).to.equal(true);
+    });
+
+    it('should not emit the idle event if not idle', function() {
+      var sBucket = new Sbucket('test');
+      sBucket._incPendingOps();
+      expect(sBucket._emitIfStateIsIdle()).to.equal(false);
+    });
+
+  });
+
+  describe('#_incPendingOps', function() {
+
+    it('should increment the _pendingOperations property', function() {
+      var sBucket = new Sbucket('test');
+      sBucket._incPendingOps();
+      expect(sBucket._pendingOperations).to.equal(1);
+    });
+
+  });
+
+  describe('#_decPendingOps', function() {
+
+    it('should decrement the _pendingOperations property', function() {
+      var sBucket = new Sbucket('test');
+      sBucket._pendingOperations = 1;
+      sBucket._decPendingOps();
+      expect(sBucket._pendingOperations).to.equal(0);
+    });
+
+  });
+
 });
