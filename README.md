@@ -108,11 +108,12 @@ number of file descriptors. Operations on a given S-Bucket should be added to
 a queue which when drained may trigger a close of the S-Bucket's underlying 
 database.
 
-Due to the nature of Kademlia's metric for determining distance, buckets will
-fill approximately evenly. The result of the XOR operation on the pseudo-random 
-first bytes of the reference ID and hash should give any given bucket a
-relatively even chance of receiving any given file. 
- 
+Kademlia's metric for determining distance is defined as the result of 
+the XOR operation on a set of bits interpreted as an integer. As such, for 
+two randomly generated sets of bits, the result is uniformly distributed. Therefore
+the XOR distance between pseudo-random first bytes of the reference ID and hash 
+give any bucket an equal chance of being selected. 
+
 Below is the frequency distribution plotted with ten million simulated calculations.
 As expected the distribution is uniform (the red dotted line indicates the theoretical
 value each bin should have): 
