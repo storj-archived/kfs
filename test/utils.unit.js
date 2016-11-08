@@ -33,15 +33,15 @@ describe('@module:kfs/utils', function() {
 
   });
 
-  describe('#coerceKeyOrIndex', function() {
+  describe('#coerceKey', function() {
 
     it('should return the valid key', function() {
       var key = utils.createReferenceId();
-      expect(utils.coerceKeyOrIndex(key)).to.equal(key);
+      expect(utils.coerceKey(key)).to.equal(key);
     });
 
     it('should return the hash of the invalid key', function() {
-      expect(utils.coerceKeyOrIndex('test')).to.equal(
+      expect(utils.coerceKey('test')).to.equal(
         'a94a8fe5ccb19ba61c4c0873d391e987982fbbd3'
       );
     });
