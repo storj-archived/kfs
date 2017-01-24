@@ -5,19 +5,11 @@ var expect = require('chai').expect;
 
 describe('BlockStream', function() {
 
-  describe('@constructor', function() {
-
-    it('should create an instance without the new keyword', function() {
-      expect(BlockStream()).to.be.instanceOf(BlockStream);
-    });
-
-  });
-
   describe('#_flush', function() {
 
     it('should pad the last chunk with zeros', function(done) {
       var bs = new BlockStream({ chunkSize: 12, padLastChunk: true });
-      var buf = Buffer([]);
+      var buf = Buffer.from([]);
       bs.on('data', function(data) {
         buf = Buffer.concat([buf, data]);
       });

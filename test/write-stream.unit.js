@@ -7,14 +7,6 @@ var utils = require('../lib/utils');
 
 describe('WritableFileStream', function() {
 
-  describe('@constructor', function() {
-
-    it('should create an instance without the new keyword', function() {
-      expect(WritableFileStream({})).to.be.instanceOf(WritableFileStream);
-    });
-
-  });
-
   describe('#_write', function() {
 
     it('should emit an error if put fails', function(done) {

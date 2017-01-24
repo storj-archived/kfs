@@ -9,14 +9,6 @@ var utils = require('../lib/utils');
 
 describe('Sbucket', function() {
 
-  describe('@constructor', function() {
-
-    it('should create an instance without the new keyword', function() {
-      expect(Sbucket('test')).to.be.instanceOf(Sbucket);
-    });
-
-  });
-
   describe('#open', function() {
 
     it('should emit an error if open fails', function(done) {

@@ -9,8 +9,8 @@ To create and open a new KFS database (or open an existing one), simply
 require the module and create a {@link Btable} object:
 
 ```
-var kfs = require('kfs');
-var myDataStore = kfs('/path/to/database.kfs');
+const kfs = require('kfs');
+const myDataStore = kfs('/path/to/database.kfs');
 ```
 
 That's it, Your data store is ready to use!
@@ -20,9 +20,9 @@ That's it, Your data store is ready to use!
 To check if a file exists at a given key, use the {@link Btable#exists} method:
 
 ```
-var some160bitKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
+const some160bitKey = 'adc83b19e793491b1c6ea0fd8b46cd9f32e592fc';
 
-myDataStore.exists(some160bitKey, function(err, exists) {
+myDataStore.exists(some160bitKey, (err, exists) => {
   console.log('The file ' + (exists ? 'DOES' : 'DOES NOT') + ' exist!');
 });
 ```
@@ -33,14 +33,14 @@ To check the available space for a file at a given key, use the
 {@link Btable#getSpaceAvailableForKey} method:
 
 ```
-var fileSizeInBytes = 4096;
+const fileSizeInBytes = 4096;
 
-myDataStore.stat(some160bitKey, function(err, result) {
+myDataStore.stat(some160bitKey, (err, result) => {
   if (err) {
     // handle error
   }
 
-  var enoughFreeSpace = result.sBucketStats.free > fileSizeInBytes;
+  let enoughFreeSpace = result.sBucketStats.free > fileSizeInBytes;
 
   console.log('There ' + (enoughFreeSpace ? 'IS': 'IS NOT') + ' enough space!');
 });
@@ -52,9 +52,9 @@ To write a raw buffer to the data store, use the {@link Btable#writeFile}
 method:
 
 ```
-var myFileBuffer = new Buffer([/* ... */]);
+const myFileBuffer = Buffer.from([/* ... */]);
 
-myDataStore.writeFile(some160bitKey, myFileBuffer, function(err) {
+myDataStore.writeFile(some160bitKey, myFileBuffer, (err) => {
   console.log('File ' + (err ? 'WAS NOT' : 'WAS') + ' written!');
 });
 ```
@@ -65,7 +65,7 @@ To read a file into memory from the data store, use the {@link Btable#readFile}
 method:
 
 ```
-myDataStore.readFile(some160bitKey, function(err, fileBuffer) {
+myDataStore.readFile(some160bitKey, (err, fileBuffer) => {
   console.log(err || fileBuffer);
 });
 ```
@@ -75,7 +75,7 @@ myDataStore.readFile(some160bitKey, function(err, fileBuffer) {
 To remove a file from the data store, use the {@link Btable#unlink} method:
 
 ```
-myDataStore.unlink(some160bitKey, function(err) {
+myDataStore.unlink(some160bitKey, (err) => {
   console.log('The file ' + (err ? 'WAS NOT' : 'WAS') + ' removed!');
 });
 ```
@@ -87,42 +87,42 @@ into memory. In these cases, use the {@link Btable#createReadStream} and
 {@link Btable#createWriteStream} methods:
 
 ```
-myDataStore.createReadStream(some160bitKey, function(err, readableStream) {
+myDataStore.createReadStream(some160bitKey, (err, readableStream) => {
   if (err) {
     // handle error
   }
 
-  readableStream.on('data', function(chunk) {
+  readableStream.on('data', (chunk) => {
     console.log('Got chunk:', chunk);
   });
 
-  readableStream.on('end', function() {
+  readableStream.on('end', () => {
     console.log('All chunks read!');
   });
 
-  readableStream.on('error', function(err) {
+  readableStream.on('error', (err) => {
     console.log('Failed to read file:', err.message);
   });
 });
 ```
 
 ```
-myDataStore.createWriteStream(some160bitKey, function(err, writableStream) {
+myDataStore.createWriteStream(some160bitKey, (err, writableStream) => {
   if (err) {
     // handle error
   }
 
-  writableStream.on('finish', function() {
+  writableStream.on('finish', () => {
     console.log('All chunks written!');
   });
 
-  writableStream.on('error', function(err) {
+  writableStream.on('error', (err) => {
     console.log('Failed to write file:', err.message);
   });
 
-  writableStream.write(new Buffer([/* ... */]));
-  writableStream.write(new Buffer([/* ... */]));
-  writableStream.write(new Buffer([/* ... */]));
+  writableStream.write(Buffer.from([/* ... */]));
+  writableStream.write(Buffer.from([/* ... */]));
+  writableStream.write(Buffer.from([/* ... */]));
   writableStream.end();
 });
 ```
