@@ -106,8 +106,7 @@
 
 
     <section class="readme-section">
-        <article><p><strong>KFS is a local file storage system inspired by Kademlia.</strong></p>
-<p><a href="https://travis-ci.org/Storj/kfs"><img src="https://img.shields.io/travis/Storj/kfs.svg?style=flat-square" alt="Build Status"></a>
+        <article><h1>KFS (Kademlia File Store)</h1><p><a href="https://travis-ci.org/Storj/kfs"><img src="https://img.shields.io/travis/Storj/kfs.svg?style=flat-square" alt="Build Status"></a>
 <a href="https://coveralls.io/r/Storj/kfs"><img src="https://img.shields.io/coveralls/Storj/kfs.svg?style=flat-square" alt="Coverage Status"></a>
 <a href="https://www.npmjs.com/package/kfs"><img src="https://img.shields.io/npm/v/kfs.svg?style=flat-square" alt="NPM"></a>
 <a href="https://raw.githubusercontent.com/storj/kfs/master/LICENSE"><img src="https://img.shields.io/badge/license-GPL3.0-blue.svg?style=flat-square" alt="License"></a></p>
@@ -184,10 +183,11 @@ and closed as needed, eliminating the potential overhead of opening a large
 number of file descriptors. Operations on a given S-Bucket should be added to 
 a queue which when drained may trigger a close of the S-Bucket's underlying 
 database.</p>
-<p>Due to the nature of Kademlia's metric for determining distance, buckets will
-fill approximately evenly. The result of the XOR operation on the pseudo-random 
-first bytes of the reference ID and hash should give any given bucket a
-relatively even chance of receiving any given file. </p>
+<p>Kademlia's metric for determining distance is defined as the result of 
+the XOR operation on a set of bits interpreted as an integer. As such, for 
+two randomly generated sets of bits, the result is uniformly distributed. Therefore
+the XOR distance between pseudo-random first bytes of the reference ID and hash 
+give any bucket an equal chance of being selected. </p>
 <p>Below is the frequency distribution plotted with ten million simulated calculations.
 As expected the distribution is uniform (the red dotted line indicates the theoretical
 value each bin should have): </p>

@@ -92,69 +92,63 @@
         <pre
             class="sunlight-highlight-javascript ">'use strict';
 
-var inherits = require('util').inherits;
-var WritableStream = require('readable-stream').Writable;
-var utils = require('./utils');
+const {Writable: WritableStream} = require('readable-stream');
+const utils = require('./utils');
 
 /**
  * Creates a writable stream for storing a file in an {@link Sbucket}
- * @constructor
- * @param {Object} options
- * @param {Sbucket} options.sBucket - The S-bucket this stream will write to
- * @param {String} options.fileKey - The key for the file to write to
  */
-function WritableFileStream(options) {
-  if (!(this instanceof WritableFileStream)) {
-    return new WritableFileStream(options);
+class WritableFileStream extends WritableStream {
+
+  /**
+   * @constructor
+   * @param {Object} options
+   * @param {Sbucket} options.sBucket - The S-bucket this stream will write to
+   * @param {String} options.fileKey - The key for the file to write to
+   */
+  constructor(options) {
+    super();
+    this._sBucket = options.sBucket;
+    this._fileKey = options.fileKey;
+    this._index = 0;
   }
 
-  this._sBucket = options.sBucket;
-  this._fileKey = options.fileKey;
-  this._index = 0;
+  /**
+   * Triggered if an error occurs
+   * @event WritableFileStream#error
+   * @param {Error} error
+   */
 
-  WritableStream.call(this);
-}
+  /**
+   * Triggered when data is finished writing
+   * @event WritableFileStream#finish
+   */
 
-/**
- * Triggered if an error occurs
- * @event WritableFileStream#error
- * @param {Error} error
- */
+  /**
+   * @private
+   */
+  _write(bytes, encoding, callback) {
+    const itemKey = utils.createItemKeyFromIndex(this._fileKey, this._index);
 
-/**
- * Triggered when data is finished writing
- * @event WritableFileStream#finish
- */
-
-inherits(WritableFileStream, WritableStream);
-
-/**
- * @private
- */
-WritableStream.prototype._write = function(bytes, encoding, callback) {
-  var self = this;
-
-  this._sBucket._db.put(
-    utils.createItemKeyFromIndex(this._fileKey, this._index),
-    bytes,
-    function(err) {
+    this._sBucket._db.put(itemKey, bytes, (err) => {
       if (err) {
         return callback(err);
       }
 
-      self._index++;
+      this._index++;
       callback();
-    }
-  );
-};
+    });
+  }
 
-/**
- * Destroys and aborts any writes for this stream
- * @param {Sbucket~unlinkCallback}
- */
-WritableFileStream.prototype.destroy = function(callback) {
-  this._sBucket.unlink(this._fileKey, callback);
-};
+  /**
+   * Destroys and aborts any writes for this stream
+   * @param {Sbucket~unlinkCallback}
+   */
+  destroy(callback) {
+    this._sBucket.unlink(this._fileKey, callback);
+  }
+
+}
 
 module.exports = WritableFileStream;
 </pre>

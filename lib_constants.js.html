@@ -96,7 +96,7 @@
 
 'use strict';
 
-module.exports = {
+module.exports = Object.freeze({
   /** @constant {Number} R - Number of bits in Reference ID */
   R: 160,
   /** @constant {Number} C - Number of bytes in a file chunk */
@@ -106,8 +106,10 @@ module.exports = {
   /** @constant {Number} B - Number of columns in a {@link Btable} */
   B: 256,
   /** @constant {String} HASH - OpenSSL id for key hashing algorithm */
-  HASH: 'sha1'
-};
+  HASH: 'sha1',
+  /** @constant {Number} SBUCKET_IDLE - Time to wait before idle event */
+  SBUCKET_IDLE: 60000
+});
 </pre>
     </article>
 </section>

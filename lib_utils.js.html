@@ -96,11 +96,11 @@
 
 'use strict';
 
-var assert = require('assert');
-var constants = require('./constants');
-var fs = require('fs');
-var crypto = require('crypto');
-var path = require('path');
+const assert = require('assert');
+const constants = require('./constants');
+const fs = require('fs');
+const crypto = require('crypto');
+const path = require('path');
 
 /**
  * A stubbed noop function
@@ -113,7 +113,7 @@ module.exports.noop = function() {};
  * @returns {Boolean}
  */
 module.exports.isValidKey = function(key) {
-  var keyBuffer;
+  let keyBuffer;
 
   try {
     keyBuffer = Buffer(key, 'hex');
@@ -138,19 +138,13 @@ module.exports.hashKey = function(key) {
 };
 
 /**
- * Coerces input into a valid file key or bucket index
- * @param {String} keyOrIndex - The bucket index or a file key
- * @returns {String|Number}
+ * Coerces input into a valid file key
+ * @param {String} key - The file key
+ * @returns {String}
  */
-module.exports.coerceKeyOrIndex = function(keyOrIndex) {
-  var key = keyOrIndex;
-
-  if (!module.exports.isValidKey(keyOrIndex)) {
-    key = parseInt(keyOrIndex);
-
-    if (Number.isNaN(key)) {
-      key = module.exports.hashKey(keyOrIndex);
-    }
+module.exports.coerceKey = function(key) {
+  if (!module.exports.isValidKey(key)) {
+    return module.exports.hashKey(key);
   }
 
   return key;
@@ -165,10 +159,11 @@ module.exports.coerceKeyOrIndex = function(keyOrIndex) {
 module.exports.createItemKeyFromIndex = function(key, index) {
   assert(typeof index === 'number', 'Invalid index supplied');
 
-  var fileKey = module.exports.hashKey(key);
-  var indexLength = Math.floor(constants.S / constants.C).toString().length;
-  var indexString = index.toString();
-  var itemIndex = '';
+  const fileKey = module.exports.hashKey(key);
+  const indexLength = Math.floor(constants.S / constants.C).toString().length;
+  const indexString = index.toString();
+
+  let itemIndex = '';
 
   assert(Buffer(fileKey, 'hex').length * 8 === constants.R, 'Invalid key');
   assert(indexString.length &lt;= indexLength, 'Index is out of bounds');
@@ -179,7 +174,7 @@ module.exports.createItemKeyFromIndex = function(key, index) {
 
   itemIndex += indexString;
 
-  return [fileKey, ' ', itemIndex].join('');
+  return `${fileKey} ${itemIndex}`;
 };
 
 /**
@@ -190,15 +185,16 @@ module.exports.createItemKeyFromIndex = function(key, index) {
 module.exports.createSbucketNameFromIndex = function(sBucketIndex) {
   assert(typeof sBucketIndex === 'number', 'Invalid index supplied');
 
-  var indexLength = constants.B.toString().length;
-  var indexString = sBucketIndex.toString();
-  var leadingZeroes = '';
+  const indexLength = constants.B.toString().length;
+  const indexString = sBucketIndex.toString();
+
+  let leadingZeroes = '';
 
   for (var i = 0; i &lt; indexLength - indexString.length; i++) {
     leadingZeroes += '0';
   }
 
-  return leadingZeroes + indexString + '.s';
+  return `${leadingZeroes}${indexString}.s`;
 };
 
 /**
@@ -213,7 +209,7 @@ module.exports.createReferenceId = function(rid) {
 
   assert(rid.length === 40, 'Invalid reference ID length');
 
-  return Buffer(rid, 'hex');
+  return Buffer.from(rid, 'hex');
 };
 
 /**
@@ -237,21 +233,21 @@ module.exports.fileDoesExist = function(filePath) {
  * @returns {String}
  */
 module.exports.toHumanReadableSize = function(bytes) {
-  var thresh = 1024;
+  const thresh = 1024;
 
   if (Math.abs(bytes) &lt; thresh) {
     return bytes + ' B';
   }
 
-  var units = ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
-  var u = -1;
+  const units = ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+  let u = -1;
 
   do {
     bytes /= thresh;
     ++u;
   } while (Math.abs(bytes) >= thresh &amp;&amp; u &lt; units.length - 1);
 
-  return bytes.toFixed(1) + ' ' + units[u];
+  return `${bytes.toFixed(1)} ${units[u]}`;
 };
 
 /**
@@ -261,7 +257,7 @@ module.exports.toHumanReadableSize = function(bytes) {
  */
 module.exports.coerceTablePath = function(tablePath) {
   if (path.extname(tablePath) !== '.kfs') {
-    return tablePath + '.kfs';
+    return `${tablePath}.kfs`;
   }
 
   return tablePath;

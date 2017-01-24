@@ -92,83 +92,78 @@
         <pre
             class="sunlight-highlight-javascript ">'use strict';
 
-var inherits = require('util').inherits;
-var ReadableStream = require('readable-stream').Readable;
-var utils = require('./utils');
+const {Readable: ReadableStream} = require('readable-stream').Readable;
+const utils = require('./utils');
 
 /**
  * Creates a readable stream of a file from a {@link Sbucket}
- * @constructor
- * @param {Object} options
- * @param {Sbucket} options.sBucket
- * @param {String} options.fileKey
  */
-function ReadableFileStream(options) {
-  if (!(this instanceof ReadableFileStream)) {
-    return new ReadableFileStream(options);
+class ReadableFileStream extends ReadableStream {
+
+  /**
+   * @constructor
+   * @param {Object} options
+   * @param {Sbucket} options.sBucket
+   * @param {String} options.fileKey
+   */
+  constructor(options) {
+    super();
+    this._sBucket = options.sBucket;
+    this._fileKey = options.fileKey;
+    this._index = 0;
   }
 
-  this._sBucket = options.sBucket;
-  this._fileKey = options.fileKey;
-  this._index = 0;
+  /**
+   * Triggered when data is available to read
+   * @event ReadableFileStream#readable
+   */
 
-  ReadableStream.call(this);
-}
+  /**
+   * Triggered when a data is pushed through the stream
+   * @event ReadableFileStream#data
+   * @param {Buffer} bytes
+   */
 
-/**
- * Triggered when data is available to read
- * @event ReadableFileStream#readable
- */
+  /**
+   * Triggered when no more data is available
+   * @event ReadableFileStream#end
+   */
 
-/**
- * Triggered when a data is pushed through the stream
- * @event ReadableFileStream#data
- * @param {Buffer} bytes
- */
+  /**
+   * Triggered if an error occurs
+   * @event ReadableFileStream#error
+   * @param {Error} error
+   */
 
-/**
- * Triggered when no more data is available
- * @event ReadableFileStream#end
- */
+  /**
+   * @private
+   */
+  _read() {
+    const itemKey = utils.createItemKeyFromIndex(this._fileKey, this._index);
 
-/**
- * Triggered if an error occurs
- * @event ReadableFileStream#error
- * @param {Error} error
- */
-
-inherits(ReadableFileStream, ReadableStream);
-
-/**
- * @private
- */
-ReadableFileStream.prototype._read = function() {
-  var self = this;
-
-  this._sBucket._db.get(
-    utils.createItemKeyFromIndex(this._fileKey, this._index),
-    function(err, result) {
+    this._sBucket._db.get(itemKey, (err, result) => {
       if (err) {
         if (utils.isNotFoundError(err)) {
-          return self.push(null);
+          return this.push(null);
         } else {
-          return self.emit('error', err);
+          return this.emit('error', err);
         }
       }
 
-      self._index++;
-      self.push(Buffer(result, 'binary'));
-    }
-  );
-};
+      this._index++;
+      this.push(Buffer(result, 'binary'));
+    });
+  }
 
-/**
- * Destroys and aborts any reads for this stream
- * @param {Sbucket~unlinkCallback}
- */
-ReadableFileStream.prototype.destroy = function(callback) {
-  this._sBucket.unlink(this._fileKey, callback);
-};
+  /**
+   * Destroys and aborts any reads for this stream
+   * @param {Sbucket~unlinkCallback}
+   */
+  destroy(callback) {
+    this._sBucket.unlink(this._fileKey, callback);
+  }
+
+}
 
 module.exports = ReadableFileStream;
 </pre>
