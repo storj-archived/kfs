@@ -18,11 +18,6 @@ describe('Btable', function() {
       _open = sinon.stub(Btable.prototype, '_open');
     });
 
-    it('should create an instance without the new keyword', function() {
-      expect(Btable('')).to.be.instanceOf(Btable);
-      expect(Btable('')).to.be.instanceOf(EventEmitter);
-    });
-
     it('should merge options with defaults', function() {
       var bTable = new Btable('some/path', { someOption: true });
       expect(bTable._options.someOption).to.equal(true);
@@ -69,8 +64,9 @@ describe('Btable', function() {
     });
 
     it('should initialize the db if it does not exist', function() {
+      /* jshint unused:false */
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(false);
-      StubbedBtable('');
+      var bTable = new StubbedBtable('');
       _fileDoesExist.restore();
       setImmediate(function() {
         expect(_initBtableDirectory.called).to.equal(true);
@@ -78,8 +74,9 @@ describe('Btable', function() {
     });
 
     it('should validate the db if it does exist', function() {
+      /* jshint unused:false */
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
-      StubbedBtable('');
+      var bTable = new StubbedBtable('');
       _fileDoesExist.restore();
       setImmediate(function() {
         expect(_validateTablePath.called).to.equal(true);
@@ -87,6 +84,7 @@ describe('Btable', function() {
     });
 
     it('should throw an error if validating table path fails', function() {
+      /* jshint unused:false */
       _validateTablePath.restore();
       _validateTablePath = sinon.stub(
         StubbedBtable.prototype,
@@ -94,7 +92,7 @@ describe('Btable', function() {
       ).throws(new Error('Failed'));
       var _fileDoesExist = sinon.stub(utils, 'fileDoesExist').returns(true);
       expect(function() {
-        StubbedBtable('');
+        var bTable = new StubbedBtable('');
       }).to.throw(Error, 'Failed');
       _fileDoesExist.restore();
     });
@@ -224,6 +222,23 @@ describe('Btable', function() {
         _options: { sBucketOpts: {} }
       }, 0);
       expect(sBucket).to.be.instanceOf(EventEmitter);
+    });
+
+    it('should close the s-bucket on idle', function(done) {
+      var StubbedBtable = proxyquire('../lib/b-table', {
+        './s-bucket': EventEmitter
+      });
+      var sBucket = StubbedBtable.prototype._getSbucketAtIndex.call({
+        _sBuckets: {},
+        _tablePath: 'some/path.kfs',
+        _options: { sBucketOpts: {} }
+      }, 0);
+      var _close = sinon.stub(sBucket, 'close');
+      sBucket.emit('idle');
+      setImmediate(() => {
+        expect(_close.called).to.equal(true);
+        done();
+      });
     });
 
   });

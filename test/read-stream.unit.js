@@ -7,14 +7,6 @@ var utils = require('../lib/utils');
 
 describe('ReadableFileStream', function() {
 
-  describe('@constructor', function() {
-
-    it('should create an instance without the new keyword', function() {
-      expect(ReadableFileStream({})).to.be.instanceOf(ReadableFileStream);
-    });
-
-  });
-
   describe('#_read', function() {
 
     it('should emit an error if get fails', function(done) {

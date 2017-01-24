@@ -9,14 +9,6 @@ var utils = require('../lib/utils');
 
 describe('Sbucket', function() {
 
-  describe('@constructor', function() {
-
-    it('should create an instance without the new keyword', function() {
-      expect(Sbucket('test')).to.be.instanceOf(Sbucket);
-    });
-
-  });
-
   describe('#open', function() {
 
     it('should emit an error if open fails', function(done) {
@@ -152,6 +144,21 @@ describe('Sbucket', function() {
       });
       setImmediate(function() {
         _rs.emit('error', new Error('Failed'));
+      });
+    });
+
+  });
+
+  describe('#createWriteStream', function() {
+
+    it('should return a write stream with a destroy method', function(done) {
+      var sBucket = new Sbucket('test');
+      var _unlink = sinon.stub(sBucket, 'unlink').callsArg(1);
+      var writeStream = sBucket.createWriteStream(utils.createReferenceId());
+      expect(typeof writeStream.destroy).to.equal('function');
+      writeStream.destroy(() => {
+        expect(_unlink.called).to.equal(true);
+        done();
       });
     });
 

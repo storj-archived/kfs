@@ -2,18 +2,18 @@
 
 'use strict';
 
-var kfs = require('..');
-var program = require('commander');
-var path = require('path');
-var fs = require('fs');
-var platform = require('os').platform();
-var async = require('async');
+const kfs = require('..');
+const program = require('commander');
+const path = require('path');
+const fs = require('fs');
+const {homedir} = require('os');
+const async = require('async');
 
-var HOME = platform !== 'win32' ? process.env.HOME : process.env.USERPROFILE;
-var DEFAULT_DB = path.join(HOME, '.kfs', 'default');
+const HOME = homedir();
+const DEFAULT_DB = path.join(HOME, '.kfs', 'default');
 
 function _openDatabase(callback) {
-  var db;
+  let db;
 
   try {
     db = kfs(program.db);
@@ -25,7 +25,7 @@ function _openDatabase(callback) {
 }
 
 function _writeFileToDatabase(fileKey, filePath) {
-  _openDatabase(function(err, db) {
+  _openDatabase((err, db) => {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
@@ -37,9 +37,9 @@ function _writeFileToDatabase(fileKey, filePath) {
         process.exit(1);
       }
 
-      var fileBuffer = fs.readFileSync(filePath);
+      const fileBuffer = fs.readFileSync(filePath);
 
-      db.writeFile(fileKey, fileBuffer, function(err) {
+      db.writeFile(fileKey, fileBuffer, (err) => {
         if (err) {
           process.stderr.write('[error] ' + err.message);
           process.exit(1);
@@ -48,18 +48,18 @@ function _writeFileToDatabase(fileKey, filePath) {
         process.exit(0);
       });
     } else {
-      db.createWriteStream(fileKey, function(err, writableStream) {
+      db.createWriteStream(fileKey, (err, writableStream) => {
         if (err) {
           process.stderr.write('[error] ' + err.message);
           process.exit(1);
         }
 
-        writableStream.on('error', function(err) {
+        writableStream.on('error', (err) => {
           process.stderr.write('[error] ' + err.message);
           process.exit(1);
         });
 
-        writableStream.on('finish', function() {
+        writableStream.on('finish', () => {
           process.exit(0);
         });
 
@@ -70,36 +70,36 @@ function _writeFileToDatabase(fileKey, filePath) {
 };
 
 function _readFileFromDatabase(fileKey, outPath) {
-   _openDatabase(function(err, db) {
+   _openDatabase((err, db) => {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
     }
 
-    db.createReadStream(fileKey, function(err, readableStream) {
+    db.createReadStream(fileKey, (err, readableStream) => {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       }
 
-      readableStream.on('error', function(err) {
+      readableStream.on('error', (err) => {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       });
 
-      readableStream.on('end', function() {
+      readableStream.on('end', () => {
         process.exit(0);
       });
 
       if (outPath) {
-        var writeStream = fs.createWriteStream(outPath);
+        const writeStream = fs.createWriteStream(outPath);
 
-        writeStream.on('error', function(err) {
+        writeStream.on('error', (err) => {
           process.stderr.write('[error] ' + err.message);
           process.exit(1);
         });
 
-        writeStream.on('finish', function() {
+        writeStream.on('finish', () => {
           process.exit(0);
         });
 
@@ -112,13 +112,13 @@ function _readFileFromDatabase(fileKey, outPath) {
 }
 
 function _unlinkFileFromDatabase(fileKey) {
-  _openDatabase(function(err, db) {
+  _openDatabase((err, db) => {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
     }
 
-    db.unlink(fileKey, function(err) {
+    db.unlink(fileKey, (err) => {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
@@ -130,7 +130,7 @@ function _unlinkFileFromDatabase(fileKey) {
 }
 
 function _statDatabase(keyOrIndex, opts) {
-  _openDatabase(function(err, db) {
+  _openDatabase((err, db) => {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
@@ -148,10 +148,10 @@ function _statDatabase(keyOrIndex, opts) {
         process.exit(1);
       }
 
-      var spacing = 2;
+      let spacing = 2;
 
       stats = stats.map(function(sBucketStats) {
-        var perc = sBucketStats.sBucketStats.size /
+        let perc = sBucketStats.sBucketStats.size /
                    sBucketStats.sBucketStats.free;
 
         sBucketStats.sBucketStats.perc = (perc * 100).toFixed(2);
@@ -162,13 +162,13 @@ function _statDatabase(keyOrIndex, opts) {
           );
         }
 
-        var sizeOutLength = sBucketStats.sBucketStats.size.toString().length;
+        let sizeOutLength = sBucketStats.sBucketStats.size.toString().length;
         spacing = spacing < sizeOutLength ? sizeOutLength + 1 : spacing
 
         return sBucketStats;
       });
 
-      stats.forEach(function(sBucketStats) {
+      stats.forEach((sBucketStats) => {
         process.stdout.write(
           kfs.utils.createSbucketNameFromIndex(sBucketStats.sBucketIndex) +
           '\t' +
@@ -187,16 +187,13 @@ function _statDatabase(keyOrIndex, opts) {
 }
 
 function _compactDatabase() {
-  var sBucketList = fs.readdirSync(
-    kfs.utils.coerceTablePath(program.db)
-  ).filter(function(fileName) {
-    return fileName !== kfs.RID_FILENAME;
-  });
+  const sBucketList = fs.readdirSync(kfs.utils.coerceTablePath(program.db))
+    .filter((fileName) => fileName !== kfs.Btable.RID_FILENAME);
 
-  async.eachSeries(sBucketList, function(sBucketName, next) {
+  async.eachSeries(sBucketList, (sBucketName, next) => {
     require('leveldown').repair(
       path.join(kfs.utils.coerceTablePath(program.db), sBucketName),
-      function(err) {
+      (err) => {
         if (err) {
           process.stderr.write('[error] ' + err.message);
           process.exit(1)
@@ -210,19 +207,23 @@ function _compactDatabase() {
 }
 
 function _listItemsInDatabase(bucketIndex, env) {
-  _openDatabase(function(err, db) {
+  _openDatabase((err, db) => {
     if (err) {
       process.stderr.write('[error] ' + err.message);
       process.exit(1);
     }
 
-    db.list(bucketIndex, function(err, keys) {
+    bucketIndex = !isNaN(bucketIndex)
+                ? Number(bucketIndex)
+                : bucketIndex;
+
+    db.list(bucketIndex, (err, keys) => {
       if (err) {
         process.stderr.write('[error] ' + err.message);
         process.exit(1);
       }
 
-      keys.forEach(function(result) {
+      keys.forEach((result) => {
         process.stdout.write(
           result.baseKey + '\t' +
           (env.human ?
@@ -231,6 +232,7 @@ function _listItemsInDatabase(bucketIndex, env) {
           '\n'
         );
       });
+      process.exit(0);
     });
   });
 }
