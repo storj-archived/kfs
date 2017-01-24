@@ -149,6 +149,21 @@ describe('Sbucket', function() {
 
   });
 
+  describe('#createWriteStream', function() {
+
+    it('should return a write stream with a destroy method', function(done) {
+      var sBucket = new Sbucket('test');
+      var _unlink = sinon.stub(sBucket, 'unlink').callsArg(1);
+      var writeStream = sBucket.createWriteStream(utils.createReferenceId());
+      expect(typeof writeStream.destroy).to.equal('function');
+      writeStream.destroy(() => {
+        expect(_unlink.called).to.equal(true);
+        done();
+      });
+    });
+
+  });
+
   describe('#writeFile', function() {
 
     it('should callback with error if write stream fails', function(done) {

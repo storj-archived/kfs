@@ -224,6 +224,23 @@ describe('Btable', function() {
       expect(sBucket).to.be.instanceOf(EventEmitter);
     });
 
+    it('should close the s-bucket on idle', function(done) {
+      var StubbedBtable = proxyquire('../lib/b-table', {
+        './s-bucket': EventEmitter
+      });
+      var sBucket = StubbedBtable.prototype._getSbucketAtIndex.call({
+        _sBuckets: {},
+        _tablePath: 'some/path.kfs',
+        _options: { sBucketOpts: {} }
+      }, 0);
+      var _close = sinon.stub(sBucket, 'close');
+      sBucket.emit('idle');
+      setImmediate(() => {
+        expect(_close.called).to.equal(true);
+        done();
+      });
+    });
+
   });
 
   describe('#_getSbucketForKey', function() {
