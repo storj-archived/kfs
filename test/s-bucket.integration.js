@@ -29,15 +29,15 @@ describe('Sbucket/Integration', function() {
   describe('#list', function() {
 
     before(function(done) {
-      var file0 = new Buffer(65536);
+      var file0 = new Buffer(65536 * 2);
       var file1 = new Buffer(65536 * 2);
-      var file2 = new Buffer(65536);
+      var file2 = new Buffer(65536 * 4);
       var index = 0;
       async.eachSeries([file0, file1, file2], function(buf, next) {
         buf.fill(1);
-        bucket.writeFile(index.toString(), buf, function() {
+        bucket.writeFile(index.toString(), buf, function(err) {
           index++;
-          next();
+          next(err);
         });
       }, done);
     });
