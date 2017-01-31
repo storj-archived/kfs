@@ -265,6 +265,15 @@ describe('Sbucket', function() {
       });
     });
 
+    it('should wait for idle if there are pending ops', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.LOCKED;
+      sBucket._lock((err) => {
+        expect(err.message).to.equal('S-bucket is already locked');
+        done();
+      });
+    });
+
     it('should only have one pending lock at a time', function(done) {
       var sBucket = new Sbucket('');
       sBucket._pendingOperations = 1;
