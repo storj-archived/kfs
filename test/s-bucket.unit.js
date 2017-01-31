@@ -56,8 +56,13 @@ describe('Sbucket', function() {
       });
     });
 
-    it.skip('should wait until unlocked if locked', function(done) {
-
+    it('should wait until unlocked if locked', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.LOCKED;
+      sBucket.open(done);
+      setImmediate(() => {
+        sBucket.emit('unlocked');
+      });
     });
 
   });
@@ -212,36 +217,114 @@ describe('Sbucket', function() {
 
   describe('#flush', function() {
 
-    it.skip('should lock, repair, unlock, and scan', function(done) {
-
+    it('should lock, repair, unlock, and scan', function(done) {
+      var memdown = require('memdown');
+      memdown.repair = sinon.stub().callsArg(1);
+      var Sbucket = proxyquire('../lib/s-bucket', { leveldown: memdown });
+      var sBucket = new Sbucket('');
+      var _lock = sinon.stub(sBucket, '_lock').callsArg(0);
+      var _unlock = sinon.stub(sBucket, '_unlock').callsArg(0);
+      var _list = sinon.stub(sBucket, 'list').callsArg(0);
+      sBucket.flush(() => {
+        _lock.restore();
+        _unlock.restore();
+        _list.restore();
+        expect(_lock.called).to.equal(true);
+        expect(memdown.repair.called).to.equal(true);
+        expect(_unlock.called).to.equal(true);
+        expect(_list.called).to.equal(true);
+        done();
+      });
     });
 
-    it.skip('should bubble errors', function(done) {
-
+    it('should bubble errors', function(done) {
+      var memdown = require('memdown');
+      memdown.repair = sinon.stub().callsArgWith(1, new Error('Failed'));
+      var Sbucket = proxyquire('../lib/s-bucket', { leveldown: memdown });
+      var sBucket = new Sbucket('');
+      var _lock = sinon.stub(sBucket, '_lock').callsArg(0);
+      sBucket.flush((err) => {
+        _lock.restore();
+        expect(_lock.called).to.equal(true);
+        expect(memdown.repair.called).to.equal(true);
+        expect(err.message).to.equal('Failed');
+        done();
+      });
     });
 
   });
 
   describe('#_lock', function() {
 
-    it.skip('should wait for idle if there are pending ops', function(done) {
-
+    it('should wait for idle if there are pending ops', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket._pendingOperations = 1;
+      sBucket._lock(done);
+      setImmediate(() => {
+        sBucket._pendingOperations = 0;
+        sBucket.emit('idle');
+      });
     });
 
-    it.skip('should error if cannot close', function(done) {
+    it('should only have one pending lock at a time', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket._pendingOperations = 1;
+      sBucket._lock(done);
+      sBucket._lock(done);
+      sBucket._lock(done);
+      sBucket._lock(done);
+      setImmediate(() => {
+        sBucket._pendingOperations = 0;
+        sBucket.emit('idle');
+      });
+    });
 
+    it('should error if cannot close', function(done) {
+      var sBucket = new Sbucket('');
+      var _close = sinon.stub(sBucket, 'close')
+                     .callsArgWith(0, new Error('Failed'));
+      sBucket._lock((err) => {
+        _close.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
     });
 
   });
 
   describe('#_unlock', function() {
 
-    it.skip('should callback immediately if not locked', function(done) {
-
+    it('should callback immediately if not locked', function(done) {
+      var sBucket = new Sbucket('');
+      var _open = sinon.stub(sBucket, 'open').callsArg(0);
+      sBucket._unlock((err) => {
+        expect(_open.called).to.equal(false);
+        expect(err).to.equal(null);
+        done();
+      });
     });
 
-    it.skip('should error if cannot open', function(done) {
+    it('should callback if open succeeds', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.LOCKED;
+      var _open = sinon.stub(sBucket, 'open').callsArg(0);
+      sBucket._unlock((err) => {
+        expect(_open.called).to.equal(true);
+        expect(err).to.equal(null);
+        done();
+      });
+    });
 
+    it('should error if cannot open', function(done) {
+      var sBucket = new Sbucket('');
+      sBucket.readyState = Sbucket.LOCKED;
+      var _open = sinon.stub(sBucket, 'open')
+                    .callsArgWith(0, new Error('Failed'));
+      sBucket._unlock((err) => {
+        expect(_open.called).to.equal(true);
+        expect(err.message).to.equal('Failed');
+        done();
+      });
     });
 
   });
