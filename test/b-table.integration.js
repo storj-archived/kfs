@@ -115,6 +115,7 @@ describe('Btable/Integration', function() {
       let stubs = [];
       for (let i in db._sBuckets) {
         stubs.push(sinon.stub(db._sBuckets[i], 'flush').callsArg(0));
+        stubs.push(sinon.stub(db._sBuckets[i], 'list').callsArg(0));
       }
       db.flush(() => {
         stubs.forEach((stub) => {
