@@ -191,19 +191,20 @@ function _compactDatabase() {
     .filter((fileName) => fileName !== kfs.Btable.RID_FILENAME);
 
   async.eachSeries(sBucketList, (sBucketName, next) => {
-    require('leveldown').repair(
-      path.join(kfs.utils.coerceTablePath(program.db), sBucketName),
-      (err) => {
-        if (err) {
-          process.stderr.write('[error] ' + err.message);
-          process.exit(1)
-        }
-
-        process.stdout.write(sBucketName + ' (done!)\n');
-        next();
-      }
+    const sBucket = new kfs.Sbucket(
+      path.join(kfs.utils.coerceTablePath(program.db), sBucketName)
     );
-  });
+
+    sBucket.flush((err) => {
+      if (err) {
+        process.stderr.write('[error] ' + err.message);
+        process.exit(1)
+      }
+
+      process.stdout.write(sBucketName + ' (done!)\n');
+      sBucket.close(next);
+    });
+  }, () => process.exit(0));
 }
 
 function _listItemsInDatabase(bucketIndex, env) {

@@ -1,6 +1,6 @@
 {
   "name": "kfs",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "a kademlia inspired local file store based on leveldb ",
   "main": "index.js",
   "bin": {
