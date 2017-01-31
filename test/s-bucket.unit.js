@@ -56,6 +56,10 @@ describe('Sbucket', function() {
       });
     });
 
+    it.skip('should wait until unlocked if locked', function(done) {
+
+    });
+
   });
 
   describe('#close', function() {
@@ -202,6 +206,42 @@ describe('Sbucket', function() {
         expect(err.message).to.equal('Failed');
         done();
       });
+    });
+
+  });
+
+  describe('#flush', function() {
+
+    it.skip('should lock, repair, unlock, and scan', function(done) {
+
+    });
+
+    it.skip('should bubble errors', function(done) {
+
+    });
+
+  });
+
+  describe('#_lock', function() {
+
+    it.skip('should wait for idle if there are pending ops', function(done) {
+
+    });
+
+    it.skip('should error if cannot close', function(done) {
+
+    });
+
+  });
+
+  describe('#_unlock', function() {
+
+    it.skip('should callback immediately if not locked', function(done) {
+
+    });
+
+    it.skip('should error if cannot open', function(done) {
+
     });
 
   });
