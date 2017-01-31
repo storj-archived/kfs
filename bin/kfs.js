@@ -124,7 +124,14 @@ function _unlinkFileFromDatabase(fileKey) {
         process.exit(1);
       }
 
-      process.exit(0);
+      db.flush((err) => {
+        if (err) {
+          process.stderr.write('[error] ' + err.message);
+          process.exit(1);
+        }
+
+        process.exit(0);
+      });
     });
   });
 }

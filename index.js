@@ -9,6 +9,8 @@ const Btable = require('./lib/b-table');
 /**
  * Returns a constructed {@link Btable}
  * @function
+ * @param {string} path - Path to the KFS store
+ * @param {object} [options] - {@link Btable} options
  */
 module.exports = (path, opts) => new Btable(path, opts);
 

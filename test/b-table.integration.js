@@ -109,11 +109,29 @@ describe('Btable/Integration', function() {
 
   });
 
+  describe('#flush', function() {
+
+    it('should call Sbucket#flush for each bucket', function(done) {
+      let stubs = [];
+      for (let i in db._sBuckets) {
+        stubs.push(sinon.stub(db._sBuckets[i], 'flush').callsArg(0));
+      }
+      db.flush(() => {
+        stubs.forEach((stub) => {
+          stub.restore();
+          expect(stub.called).to.equal(true);
+        });
+        done();
+      });
+    });
+
+  });
+
   describe('#stat', function() {
 
     it('should return the stats for all buckets', function(done) {
       db.stat(function(err, results) {
-        expect(results).to.have.lengthOf(2);
+        expect(results).to.have.lengthOf(256);
         done();
       });
     });

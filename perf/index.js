@@ -34,11 +34,12 @@ module.exports = function(options, callback) {
  * @param {Object} readResults
  * @param {Object} unlinkResults
  */
-module.exports.formatResults = function(writeRes, readRes, unlinkRes) {
+module.exports.formatResults = function(wRes, rRes, uRes, fRes) {
   return {
-    writes: writeRes,
-    reads: readRes,
-    unlinks: unlinkRes
+    writes: wRes,
+    reads: rRes,
+    unlinks: uRes,
+    flush: fRes
   };
 };
 
@@ -71,7 +72,7 @@ if (process.argv[2] === 'exec') {
       tmpPath: TMP_PATH,
       tablePath: TABLE_PATH,
       bTable: bTable
-    }, function(err, writeResults, readResults, unlinkResults) {
+    }, function(err, wResults, rResults, uResults, fResults) {
       if (err) {
         return console.error('Error running benchmarks:', err);
       }
@@ -79,9 +80,10 @@ if (process.argv[2] === 'exec') {
       testsRun++;
 
       results.push(module.exports.formatResults(
-        writeResults,
-        readResults,
-        unlinkResults
+        wResults,
+        rResults,
+        uResults,
+        fResults
       ));
 
       if (testsRun < tests) {
