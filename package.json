@@ -38,7 +38,7 @@
   "dependencies": {
     "async": "^2.0.1",
     "commander": "^2.9.0",
-    "leveldown": "^1.4.6",
+    "leveldown": "bookchin/leveldown#feature/compact-range",
     "merge": "^1.2.0",
     "mkdirp": "^0.5.1",
     "readable-stream": "^2.1.5"

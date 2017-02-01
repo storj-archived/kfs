@@ -56,17 +56,6 @@ describe('Sbucket', function() {
       });
     });
 
-    it('should error if locked', function(done) {
-      var sBucket = new Sbucket('');
-      sBucket.readyState = Sbucket.LOCKED;
-      sBucket.open((err) => {
-        expect(err.message).to.equal(
-          'S-bucket is currently locked for flushing'
-        );
-        done();
-      });
-    });
-
   });
 
   describe('#close', function() {
@@ -220,104 +209,22 @@ describe('Sbucket', function() {
   describe('#flush', function() {
 
     it('should lock, repair, unlock', function(done) {
-      var memdown = require('memdown');
-      memdown.repair = sinon.stub().callsArg(1);
-      var Sbucket = proxyquire('../lib/s-bucket', { leveldown: memdown });
       var sBucket = new Sbucket('');
-      var _lock = sinon.stub(sBucket, '_lock').callsArg(0);
-      var _unlock = sinon.stub(sBucket, '_unlock').callsArg(0);
+      var compactRange = sinon.stub(sBucket._db, 'compactRange').callsArg(2);
       sBucket.flush(() => {
-        _lock.restore();
-        _unlock.restore();
-        expect(_lock.called).to.equal(true);
-        expect(memdown.repair.called).to.equal(true);
-        expect(_unlock.called).to.equal(true);
+        expect(compactRange.called).to.equal(true);
         done();
       });
     });
 
     it('should bubble errors', function(done) {
-      var memdown = require('memdown');
-      memdown.repair = sinon.stub().callsArgWith(1, new Error('Failed'));
-      var Sbucket = proxyquire('../lib/s-bucket', { leveldown: memdown });
       var sBucket = new Sbucket('');
-      var _lock = sinon.stub(sBucket, '_lock').callsArg(0);
+      var compactRange = sinon.stub(sBucket._db, 'compactRange').callsArgWith(
+        2, new Error('Failed')
+      );
       sBucket.flush((err) => {
-        _lock.restore();
-        expect(_lock.called).to.equal(true);
-        expect(memdown.repair.called).to.equal(true);
+        compactRange.restore();
         expect(err.message).to.equal('Failed');
-        done();
-      });
-    });
-
-  });
-
-  describe('#_lock', function() {
-
-    it('should wait for idle if there are pending ops', function(done) {
-      var sBucket = new Sbucket('');
-      sBucket._pendingOperations = 1;
-      sBucket._lock(done);
-      setImmediate(() => {
-        sBucket._pendingOperations = 0;
-        sBucket.emit('idle');
-      });
-    });
-
-    it('should wait for idle if there are pending ops', function(done) {
-      var sBucket = new Sbucket('');
-      sBucket.readyState = Sbucket.LOCKED;
-      sBucket._lock((err) => {
-        expect(err.message).to.equal('S-bucket is already locked');
-        done();
-      });
-    });
-
-    it('should only have one pending lock at a time', function(done) {
-      var sBucket = new Sbucket('');
-      sBucket._pendingOperations = 1;
-      sBucket._lock(done);
-      sBucket._lock(done);
-      sBucket._lock(done);
-      sBucket._lock(done);
-      setImmediate(() => {
-        sBucket._pendingOperations = 0;
-        sBucket.emit('idle');
-      });
-    });
-
-    it('should error if cannot close', function(done) {
-      var sBucket = new Sbucket('');
-      var _close = sinon.stub(sBucket, 'close')
-                     .callsArgWith(0, new Error('Failed'));
-      sBucket._lock((err) => {
-        _close.restore();
-        expect(err.message).to.equal('Failed');
-        done();
-      });
-    });
-
-  });
-
-  describe('#_unlock', function() {
-
-    it('should callback immediately if not locked', function(done) {
-      var sBucket = new Sbucket('');
-      var _open = sinon.stub(sBucket, 'open').callsArg(0);
-      sBucket._unlock((err) => {
-        expect(_open.called).to.equal(false);
-        expect(err).to.equal(null);
-        done();
-      });
-    });
-
-    it('should callback if open succeeds', function(done) {
-      var sBucket = new Sbucket('');
-      sBucket.readyState = Sbucket.LOCKED;
-      sBucket._unlock((err) => {
-        expect(err).to.equal(null);
-        expect(sBucket.readyState).to.equal(Sbucket.CLOSED);
         done();
       });
     });
