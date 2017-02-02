@@ -124,7 +124,14 @@ function _unlinkFileFromDatabase(fileKey) {
         process.exit(1);
       }
 
-      process.exit(0);
+      db.flush((err) => {
+        if (err) {
+          process.stderr.write('[error] ' + err.message);
+          process.exit(1);
+        }
+
+        process.exit(0);
+      });
     });
   });
 }
@@ -183,26 +190,6 @@ function _statDatabase(keyOrIndex, opts) {
 
       process.exit(0);
     }
-  });
-}
-
-function _compactDatabase() {
-  const sBucketList = fs.readdirSync(kfs.utils.coerceTablePath(program.db))
-    .filter((fileName) => fileName !== kfs.Btable.RID_FILENAME);
-
-  async.eachSeries(sBucketList, (sBucketName, next) => {
-    require('leveldown').repair(
-      path.join(kfs.utils.coerceTablePath(program.db), sBucketName),
-      (err) => {
-        if (err) {
-          process.stderr.write('[error] ' + err.message);
-          process.exit(1)
-        }
-
-        process.stdout.write(sBucketName + ' (done!)\n');
-        next();
-      }
-    );
   });
 }
 
@@ -275,11 +262,6 @@ program
   .option('-h, --human', 'print human readable format')
   .description('get the free and used space for the database ')
   .action(_statDatabase);
-
-program
-  .command('compact')
-  .description('trigger a compaction of all database buckets')
-  .action(_compactDatabase);
 
 program
   .command('*')

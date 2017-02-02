@@ -206,6 +206,31 @@ describe('Sbucket', function() {
 
   });
 
+  describe('#flush', function() {
+
+    it('should lock, repair, unlock', function(done) {
+      var sBucket = new Sbucket('');
+      var compactRange = sinon.stub(sBucket._db, 'compactRange').callsArg(2);
+      sBucket.flush(() => {
+        expect(compactRange.called).to.equal(true);
+        done();
+      });
+    });
+
+    it('should bubble errors', function(done) {
+      var sBucket = new Sbucket('');
+      var compactRange = sinon.stub(sBucket._db, 'compactRange').callsArgWith(
+        2, new Error('Failed')
+      );
+      sBucket.flush((err) => {
+        compactRange.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+  });
+
   describe('#_checkIdleState', function() {
 
     it('should emit the idle event if idle for 60000ms', function(done) {
