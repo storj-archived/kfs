@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>KFS Tutorial: Motivation and Mechanics</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<script src="scripts/highlight.min.js"></script>
+
+	<link type="text/css" rel="stylesheet" href="styles/site.storj.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" style="background-image:url(img/storj-kfs.svg)"  href="index.html">KFS</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-kfs.html">kfs</a></li><li><a href="module-kfs_constants.html">kfs/constants</a></li><li><a href="module-kfs_utils.html">kfs/utils</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="BlockStream.html">BlockStream</a></li><li><a href="Btable.html">Btable</a></li><li><a href="ReadableFileStream.html">ReadableFileStream</a></li><li><a href="Sbucket.html">Sbucket</a></li><li><a href="WritableFileStream.html">WritableFileStream</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="BlockStream.html#event:data">BlockStream#event:data</a></li><li><a href="BlockStream.html#event:end">BlockStream#event:end</a></li><li><a href="ReadableFileStream.html#event:data">ReadableFileStream#event:data</a></li><li><a href="ReadableFileStream.html#event:end">ReadableFileStream#event:end</a></li><li><a href="ReadableFileStream.html#event:error">ReadableFileStream#event:error</a></li><li><a href="ReadableFileStream.html#event:readable">ReadableFileStream#event:readable</a></li><li><a href="Sbucket.html#event:close">Sbucket#event:close</a></li><li><a href="Sbucket.html#event:idle">Sbucket#event:idle</a></li><li><a href="Sbucket.html#event:locked">Sbucket#event:locked</a></li><li><a href="Sbucket.html#event:open">Sbucket#event:open</a></li><li><a href="Sbucket.html#event:unlocked">Sbucket#event:unlocked</a></li><li><a href="WritableFileStream.html#event:error">WritableFileStream#event:error</a></li><li><a href="WritableFileStream.html#event:finish">WritableFileStream#event:finish</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-about.html">Motivation and Mechanics</a></li><li><a href="tutorial-cli.html">Command Line Interface</a></li><li><a href="tutorial-kfs.html">Programmatic Usage</a></li><li><a href="tutorial-performance-testing.html">Performance Testing the Changes</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+		<div class="col-sm-3 col-md-4">
+            <form class="navbar-form" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                    <div class="input-group-btn">
+                        <button class="btn btn-primary" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			<section class="tutorial-section">
+
+<header>
+    
+
+    <h2>Motivation and Mechanics</h2>
+</header>
+
+<article>
+    <p>The Storj network consists of a number of distributed peers who provide 
+storage capacity for lease to others. In its current implementation, these 
+nodes store encrypted shards and their associated metadata in a [LevelDB]. 
+LevelDB provides a number of features that make it desirable for this use 
+case; this includes its lexicographically sorted keys providing fast lookups 
+for content-addressable values, fast and efficient compression, and perhaps 
+most notably its portability which allows the Storj software to run on a 
+wide range of hardware including dated or underpowered computers.</p>
+<p>However, due to the nature of LevelDB's design and its implementation in 
+the Storj software, its performance suffers after the size of the database 
+exceeds approximately 100GiB. This impact is larger on lower end systems and 
+can also vary based on the type of disk in use. These performance issues seem 
+to arise from LevelDB's compaction mechanism (which is an otherwise desirable 
+feature). In addition to the cost of compaction, LevelDB blocks reads and 
+writes during this process, which causes storage nodes to become effectively 
+offline until the process completes. </p>
+<p>These properties indicate that if the size of a single database can be given an 
+upper bound, then the cost of compaction can be significantly reduced to an 
+acceptable level. Futhermore, in using a single database, if one level becomes 
+corrupted, deleted, or otherwise inaccessible, the entire database may become 
+unusable and unrecoverable. For these reasons, the KFS system seeks to create 
+a series of size-capped databases where data is stored in a given &quot;shard&quot; 
+based on a deterministic metric to ensure a sufficiently random and even 
+spread to bound the cost of compaction, to reduce the impact of corruption, and 
+to completely eliminate the need to maintain an index or state machine to
+efficiently lookup stored data.</p>
+<h3>S-Buckets and Routing</h3><p>KFS requires that there be a reference identifier, which can be any arbitrary 
+<code>R</code> bit key. This can be randomly generated upon creation of the database or 
+derived from some other application or protocol specific information. In the 
+Storj network, nodes are addressed with a 160 bit node identifier derived from 
+the public portion of an ECDSA key pair. This <em>Reference ID</em> is used to 
+calculate the database shard or <em>S-Bucket</em> to which a given piece of data 
+belongs. Collectively, these S-Buckets form the <em>B-Table</em>.</p>
+<p>In KFS, there are a total of <code>B</code> S-Buckets, numbered <code>0</code>-<code>B-1</code>. To determine 
+which bucket a piece of raw binary data belongs in, calculate the [distance] 
+between the first byte of the hash of the data and the first byte of the 
+reference ID. This is to say that if the distance between those bytes is 137, 
+then the raw binary data should be stored in S-Bucket 137. An S-Bucket has a 
+fixed size, <code>S</code>, in bytes. This means that a KFS database has a maximum size of 
+<code>B * S</code> bytes. Once an S-Bucket is full, no more data can be placed in it. Once 
+a KFS database is full, another should be created using a new Reference ID. 
+Given the default constants, KFS databases are capped at a maximum of 8TiB each.</p>
+<h3>Keying Data by Chunks</h3><p>To optimize the efficiency of reads and writes in KFS, data is stored in <code>C</code> 
+sized chunks (or less), keyed by the full content's hash, followed by a 
+space and a numerical index. This is performed to ensure that key/value pairs 
+are small and that reading and writing data to and from a S-Bucket is done 
+sequentially and can allow for efficient streaming of data both in and out of 
+the S-bucket.</p>
+<p>Since LevelDB sorts items lexicographically, keys for data chunks should be 
+strings and consist of:</p>
+<pre class="prettyprint source"><code>Hexidecimal(Hash) + ' ' + 00000N</code></pre><p>The number of preceding zeroes in the numerical index should be set such that 
+a S-Bucket that contains only a single file split into <code>C</code> sized chunks  can 
+still be read sequentially from the database. Using the default constants 
+would make the highest number index 262144, so the number of leading zeroes 
+should be less than or equal to five.</p>
+<h3>Ad-Hoc S-Bucket Initialization</h3><p>Given the low cost of creating and opening a LevelDB, it is not necessary to 
+create all <code>B</code> S-Buckets at once. Instead, an S-Bucket can be created the first 
+time data is to be stored inside of it. Additionally, S-Buckets can be opened 
+and closed as needed, eliminating the potential overhead of opening a large 
+number of file descriptors. Operations on a given S-Bucket should be added to 
+a queue which when drained may trigger a close of the S-Bucket's underlying 
+database.</p>
+<p>Kademlia's metric for determining distance is defined as the result of 
+the XOR operation on a set of bits interpreted as an integer. As such, for 
+two randomly generated sets of bits, the result is uniformly distributed. Therefore
+the XOR distance between pseudo-random first bytes of the reference ID and hash 
+give any bucket an equal chance of being selected. </p>
+<p>Below is the frequency distribution plotted with ten million simulated calculations.
+As expected the distribution is uniform (the red dotted line indicates the theoretical
+value each bin should have): </p>
+<p><img src="doc/img/xor-metric-distribution.png" alt="Frequency Distribution"></p>
+<p>Even with a uniform distribution, as the node reaches capacity some buckets will fill sooner than others. 
+Offers that would be sorted into these buckets should be declined and relayed to other nodes.</p>
+<h2>Constants</h2><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td>Number of columns in the B-table</td>
+<td>256</td>
+</tr>
+<tr>
+<td>S</td>
+<td>Size (in bytes) of an S-Bucket</td>
+<td>34359738368 (32GiB)</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Size (in bytes) of a file chunk</td>
+<td>131072</td>
+</tr>
+<tr>
+<td>R</td>
+<td>Number of bits in the Reference ID</td>
+<td>160</td>
+</tr>
+</tbody>
+</table>
+<h2>Considerations Specific to Storj</h2><ul>
+<li>Storj farmers receive contracts for data shards that are already close to 
+their own Node ID. To improve S-Bucket distribution, it may be desirable to 
+double hash the data or otherwise force a degree of randomness before 
+selecting a S-Bucket for storage.</li>
+<li>The use of KFS in the Storj network creates an upper limit to how much data 
+can be stored by a given Node ID (or identity). This encourages farmers to 
+operate multiple nodes with different identities which lends itself to better 
+network integration.</li>
+<li>The use of HD (hierachical deterministic) private keys could allow a single 
+farmer identity to assume multiple Reference IDs, thus eliminating the limit.</li>
+<li>KFS does not track or store metadata about the contents of a S-Bucket, which 
+in the context of the Storj network would include contracts and other special 
+information related to a piece of data. Applications should handle this via 
+their own means.</li>
+</ul>
+</article>
+
+</section>
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+<div class="modal fade" id="searchResults">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Search results</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<footer>
+
+
+	<span class="copyright">
+	Copyright 2016 Storj Labs, Inc
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a>
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+<script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	$('pre').each(function(i, block) {
+		hljs.highlightBlock(block);
+	});
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			var id = $( heading ).attr( "id" );
+			return id && id.replace(/\~/g, '-inner-').replace(/\./g, '-static-') || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		SearcherDisplay.init();
+	});
+</script>
+
+</body>
+</html>
