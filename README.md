@@ -12,7 +12,7 @@ where content-addressable data is placed in a shard using the same routing
 metric and algorithm used by the Kademlia distributed hash table.
 
 Be sure to read about the 
-[motivation and how it works](https://storj.github.io/kfs/tutorial-about.md)!
+[motivation and how it works](https://storj.github.io/kfs/tutorial-about.html)!
 
 Quick Start
 -----------
