@@ -20,7 +20,7 @@ Quick Start
 Install the `kfs` package using [Node Package Manager].
 
 ```
-npm install kfs --build-from-source --save
+npm install kfs --save
 ```
 
 This will install `kfs` as a dependency of your own project. See the 
