@@ -1,6 +1,6 @@
 {
   "name": "kfs",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "a kademlia inspired local file store based on leveldb ",
   "main": "index.js",
   "bin": {
@@ -38,7 +38,7 @@
   "dependencies": {
     "async": "^2.0.1",
     "commander": "^2.9.0",
-    "leveldown": "bookchin/leveldown#feature/compact-range",
+    "leveldown": "^1.6.0",
     "merge": "^1.2.0",
     "mkdirp": "^0.5.1",
     "readable-stream": "^2.1.5"
