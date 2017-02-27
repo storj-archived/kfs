@@ -122,8 +122,8 @@ describe('Btable/Integration', function() {
       );
       db.flush(() => {
         _getSbucketForKey.restore();
-        expect(_getSbucketForKey.callCount).to.equal(256);
-        expect(flush.callCount).to.equal(256);
+        expect(_getSbucketForKey.callCount).to.equal(2);
+        expect(flush.callCount).to.equal(2);
         done();
       });
     });
