@@ -42,7 +42,7 @@ describe('@module:kfs/utils', function() {
 
     it('should return the hash of the invalid key', function() {
       expect(utils.coerceKey('test')).to.equal(
-        'a94a8fe5ccb19ba61c4c0873d391e987982fbbd3'
+        '5e52fee47e6b070565f74372468cdc699de89107'
       );
     });
 
