@@ -26,4 +26,25 @@ describe('BlockStream', function() {
 
   });
 
+  describe('#_transform', function() {
+
+    it('should return N-sized chunks', function(done) {
+      const bs = new BlockStream({ chunkSize: 12, padLastChunk: false });
+      const ar = [];
+      bs.on('data', data => ar.push(data));
+      bs.once('end', function() {
+        expect(Buffer.compare(ar.shift(), Buffer.from('ABCDEFGHIJKL'))).to.equal(0);
+        expect(Buffer.compare(ar.shift(), Buffer.from('MNOPQRSTUVWX'))).to.equal(0);
+        expect(Buffer.compare(ar.shift(), Buffer.from('YZ'))).to.equal(0);
+        done();
+      });
+      bs.write('AB');      
+      bs.write('CDEFGHIJKL');
+      bs.write('MNOPQRSTUVWXY');
+      bs.write('Z');
+      bs.end();
+    });
+
+  });  
+
 });
