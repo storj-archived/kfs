@@ -8,7 +8,13 @@ describe('BlockStream', function() {
   describe('#_flush', function() {
 
     it('should pad the last chunk with zeros', function(done) {
-      var bs = new BlockStream({ chunkSize: 12, padLastChunk: true });
+      var bs = new BlockStream({
+        sBucket: {
+          _chunkFree: [],
+          _chunkSize : 12
+        },
+        padLastChunk: true
+      });
       var buf = Buffer.from([]);
       bs.on('data', function(data) {
         buf = Buffer.concat([buf, data]);
@@ -29,7 +35,13 @@ describe('BlockStream', function() {
   describe('#_transform', function() {
 
     it('should return N-sized chunks', function(done) {
-      const bs = new BlockStream({ chunkSize: 12, padLastChunk: false });
+      const bs = new BlockStream({
+        sBucket: {
+          _chunkFree: [],
+          _chunkSize : 12
+        },
+        padLastChunk: false
+      });
       const ar = [];
       bs.on('data', data => ar.push(data));
       bs.once('end', function() {

@@ -15,7 +15,8 @@ describe('WritableFileStream', function() {
         sBucket: {
           _db: {
             put: sinon.stub().callsArgWith(2, new Error('Failed'))
-          }
+          },
+          _chunkFree: []
         }
       });
       ws.on('error', function(err) {
