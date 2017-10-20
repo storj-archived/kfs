@@ -36,12 +36,12 @@
   },
   "homepage": "https://github.com/storj/kfs#readme",
   "dependencies": {
-    "async": "^2.0.1",
+    "async": "^2.5.0",
     "commander": "^2.9.0",
-    "leveldown": "^1.6.0",
+    "leveldown": "^2.0.0",
     "merge": "^1.2.0",
     "mkdirp": "^0.5.1",
-    "readable-stream": "^2.1.5"
+    "readable-stream": "^2.3.3"
   },
   "devDependencies": {
     "chai": "^3.5.0",
