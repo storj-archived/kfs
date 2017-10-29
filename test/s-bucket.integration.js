@@ -26,15 +26,18 @@ describe('Sbucket/Integration', function() {
     });
   });
 
-  describe('#list', function() {
+  after(function() {
+    rimraf.sync(TMP_DIR);
+  });
+
+  describe('#all', function() {
+    var file0 = Buffer.allocUnsafe(65536 * 2);
+    var file1 = Buffer.allocUnsafe(65536 * 2);
+    var file2 = Buffer.allocUnsafe(65536 * 5);
 
     before(function(done) {
-      var file0 = new Buffer(65536 * 2);
-      var file1 = new Buffer(65536 * 2);
-      var file2 = new Buffer(65536 * 4);
       var index = 0;
       async.eachSeries([file0, file1, file2], function(buf, next) {
-        buf.fill(1);
         bucket.writeFile(index.toString(), buf, function(err) {
           index++;
           next(err);
@@ -60,10 +63,49 @@ describe('Sbucket/Integration', function() {
       });
     });
 
+    it('should read successfully by range (0-500)', function(done) {
+      let position = 0;
+      let length = 20;
+      bucket.readFileRange('0', position, length, (err, buff) => {
+        if (err) {
+          return done(err);
+        }
+
+        expect(buff.toString('hex')).to.equal(file0.slice(position, position + length).toString('hex'));
+        done();
+      });
+
+    });
+
+    it('should read successfully by range (1000-1500)', function(done) {
+      let position = 1000;
+      let length = 20;
+      bucket.readFileRange('0', position, length, (err, buff) => {
+        if (err) {
+          return done(err);
+        }
+
+        expect(buff.toString('hex')).to.equal(file0.slice(position, position + length).toString('hex'));
+        done();
+      });
+
+    });
+
+    it('should read successfully by range (cross multiple chunks)', function(done) {
+      let position = bucket._chunkSize*2 - 10;
+      let length = 20;
+      bucket.readFileRange('2', position, length, (err, buff) => {
+        if (err) {
+          return done(err);
+        }
+
+        expect(buff.toString('hex')).to.equal(file2.slice(position, position + length).toString('hex'));
+        done();
+      });
+
+    });
+
   });
 
-  after(function() {
-    rimraf.sync(TMP_DIR);
-  });
 
 });

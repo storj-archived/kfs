@@ -1,6 +1,6 @@
 {
   "name": "my-kfs",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "a kademlia inspired local file store based on leveldb; forked from storj/kfs",
   "main": "index.js",
   "bin": {
