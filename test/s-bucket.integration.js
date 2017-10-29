@@ -91,6 +91,23 @@ describe('Sbucket/Integration', function() {
 
     });
 
+    it('should read successfully by range (beyond buffer end)', function(done) {
+      let position = file0.length-10;
+      let length = 20;
+      bucket.readFileRange('0', position, length, (err, buff) => {
+        if (err) {
+          return done(err);
+        }
+
+        console.log(buff);
+        console.log(file0.slice(position, position + length));
+
+        expect(buff.toString('hex')).to.equal(file0.slice(position, position + length).toString('hex'));
+        done();
+      });
+
+    });
+
     it('should read successfully by range (cross multiple chunks)', function(done) {
       let position = bucket._chunkSize*2 - 10;
       let length = 20;
