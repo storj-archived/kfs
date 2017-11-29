@@ -198,18 +198,12 @@ describe('Btable/Integration', function() {
       });
     });
 
-  });
-
-  describe('#readFileRange', function() {
-
     it('should read the file range from the database', function(done) {
       var fileData = new Buffer('hello kfs!');
       var fileHash = crypto.createHash('sha1').update(fileData).digest('hex');
 
       db.readFileRange(fileHash, 0, 10, function(err, result) {
         expect(err).to.equal(null);
-        // console.log(result);
-        // console.log(fileData.slice(0, 10));
         expect(Buffer.compare(result, fileData.slice(0, 10))).to.equal(0);
         done();
       });
