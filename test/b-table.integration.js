@@ -200,6 +200,35 @@ describe('Btable/Integration', function() {
 
   });
 
+  describe('#readFileRange', function() {
+
+    it('should read the file range from the database', function(done) {
+      var fileData = new Buffer('hello kfs!');
+      var fileHash = crypto.createHash('sha1').update(fileData).digest('hex');
+
+      db.readFileRange(fileHash, 0, 10, function(err, result) {
+        expect(err).to.equal(null);
+        // console.log(result);
+        // console.log(fileData.slice(0, 10));
+        expect(Buffer.compare(result, fileData.slice(0, 10))).to.equal(0);
+        done();
+      });
+    });
+
+    it('should callback with error if cannot get bucket', function(done) {
+      var _getSbucketForKey = sinon.stub(db, '_getSbucketForKey').callsArgWith(
+          1,
+          new Error('Failed')
+      );
+      db.readFileRange('0000', 0, 10, function(err) {
+        _getSbucketForKey.restore();
+        expect(err.message).to.equal('Failed');
+        done();
+      });
+    });
+
+  });
+
   describe('#createReadStream', function() {
 
     it('should write the stream to the database', function(done) {
