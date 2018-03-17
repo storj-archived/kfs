@@ -4,11 +4,10 @@
   },
   "templates": {
     "systemName": "KFS",
-    "copyright":  "Copyright 2016 Storj Labs, Inc",
     "includeDate": false,
     "navType": "vertical",
-    "theme": "storj",
-    "logoFile": "img/storj-kfs.svg",
+    "theme": "my",
+    "logoFile": "img/my-kfs.svg",
     "linenums": false,
     "collapseSymbols": false,
     "inverseNav": false,
